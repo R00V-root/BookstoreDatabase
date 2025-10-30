@@ -35,7 +35,7 @@ Load demo credentials once the stack is running:
 
 ```bash
 docker-compose run --rm web python bookstore/manage.py loaddata \
-    store/fixtures/groups.json store/fixtures/users.json store/fixtures/user_groups.json
+    store/fixtures/groups.json store/fixtures/users.json
 docker-compose run --rm web python bookstore/manage.py bootstrap_roles
 ```
 
@@ -55,7 +55,7 @@ Initial extensions (`pg_trgm`, `pgcrypto`) are created via `db/init/01_extension
 To apply manual schema changes outside of Django ORM, run:
 
 ```bash
-docker-compose run --rm db psql -U $POSTGRES_USER -d $POSTGRES_DB -f /app/db/schema.sql
+docker-compose exec -T db psql -U $POSTGRES_USER -d $POSTGRES_DB < db/schema.sql
 ```
 
 ## Synthetic Data
