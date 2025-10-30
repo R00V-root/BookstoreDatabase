@@ -1,0 +1,30 @@
+{% extends 'store/base.html' %}
+{% block title %}Books{% endblock %}
+{% block content %}
+<div class="level">
+    <div class="level-left"><h2 class="subtitle">Books</h2></div>
+    <div class="level-right"><a class="button is-primary" href="{% url 'book-create' %}">Add Book</a></div>
+</div>
+<table class="table is-fullwidth">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>ISBN</th>
+            <th>Publisher</th>
+            <th>Price</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for book in object_list %}
+            <tr>
+                <td>{{ book.title }}</td>
+                <td>{{ book.isbn }}</td>
+                <td>{{ book.publisher.name }}</td>
+                <td>{{ book.price }} {{ book.currency }}</td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="4">No books found.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

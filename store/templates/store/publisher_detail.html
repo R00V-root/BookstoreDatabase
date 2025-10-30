@@ -1,0 +1,37 @@
+{% extends 'store/base.html' %}
+{% block title %}Vendor Detail{% endblock %}
+{% block content %}
+<div class="box">
+    <h2 class="subtitle">{{ object.name }}</h2>
+    <p><strong>Email:</strong> {{ object.email }}</p>
+    <p><strong>Website:</strong> {{ object.website }}</p>
+</div>
+<h3 class="subtitle">Products</h3>
+<table class="table is-fullwidth">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>ISBN</th>
+            <th>Price</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for book in books %}
+            <tr>
+                <td>{{ book.title }}</td>
+                <td>{{ book.isbn }}</td>
+                <td>{{ book.price }} {{ book.currency }}</td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="3">No books for this vendor.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h3 class="subtitle">Quick Add Product</h3>
+<form method="post" class="box">
+    {% csrf_token %}
+    {{ book_form.as_p }}
+    <button class="button is-primary" type="submit">Add Book</button>
+</form>
+{% endblock %}
