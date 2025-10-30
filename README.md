@@ -35,7 +35,7 @@ Load demo credentials once the stack is running:
 
 ```bash
 docker-compose run --rm web python bookstore/manage.py loaddata \
-    store/fixtures/groups.json store/fixtures/users.json
+    store/fixtures/groups.json store/fixtures/users.json store/fixtures/user_groups.json
 docker-compose run --rm web python bookstore/manage.py bootstrap_roles
 ```
 
