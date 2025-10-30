@@ -34,9 +34,9 @@ The web interface will be available at `http://localhost:8000/store/login/`.
 Load demo credentials once the stack is running:
 
 ```bash
-docker-compose run --rm web python manage.py loaddata \
+docker-compose run --rm web python bookstore/manage.py loaddata \
     store/fixtures/groups.json store/fixtures/users.json store/fixtures/user_groups.json
-docker-compose run --rm web python manage.py bootstrap_roles
+docker-compose run --rm web python bookstore/manage.py bootstrap_roles
 ```
 
 Sign in using `admin` / `admin123` or `employee` / `admin123`.
