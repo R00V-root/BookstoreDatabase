@@ -1,0 +1,9 @@
+{% extends 'store/base.html' %}
+{% block title %}New Customer{% endblock %}
+{% block content %}
+<form method="post" class="box">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button class="button is-primary" type="submit">Save</button>
+</form>
+{% endblock %}

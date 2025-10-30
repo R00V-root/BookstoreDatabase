@@ -1,0 +1,25 @@
+{% extends 'store/base.html' %}
+{% block title %}Vendors{% endblock %}
+{% block content %}
+<h2 class="subtitle">Publishers</h2>
+<table class="table is-fullwidth">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Website</th>
+            <th>Email</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for publisher in object_list %}
+            <tr>
+                <td><a href="{% url 'publisher-detail' publisher.pk %}">{{ publisher.name }}</a></td>
+                <td>{{ publisher.website }}</td>
+                <td>{{ publisher.email }}</td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="3">No vendors found.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

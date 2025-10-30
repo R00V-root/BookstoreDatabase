@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>{% block title %}Bookstore Admin{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+</head>
+<body>
+<section class="section">
+    <div class="container">
+        <h1 class="title">Bookstore Back Office</h1>
+        {% if user.is_authenticated %}
+            <p>Logged in as {{ user.username }} | <a href="{% url 'logout' %}">Logout</a></p>
+            <nav class="breadcrumb" aria-label="breadcrumbs">
+                <ul>
+                    <li><a href="{% url 'hub' %}">Hub</a></li>
+                    <li><a href="{% url 'customer-list' %}">Customers</a></li>
+                    <li><a href="{% url 'book-list' %}">Products</a></li>
+                    <li><a href="{% url 'publisher-list' %}">Vendors</a></li>
+                    <li><a href="{% url 'invoice-list' %}">Invoices</a></li>
+                    <li><a href="{% url 'invoice-report' %}">Reports</a></li>
+                </ul>
+            </nav>
+        {% endif %}
+        {% if messages %}
+            {% for message in messages %}
+                <article class="message is-info">
+                    <div class="message-body">{{ message }}</div>
+                </article>
+            {% endfor %}
+        {% endif %}
+        {% block content %}{% endblock %}
+    </div>
+</section>
+</body>
+</html>

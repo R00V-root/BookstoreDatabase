@@ -1,0 +1,28 @@
+{% extends 'store/base.html' %}
+{% block title %}Customers{% endblock %}
+{% block content %}
+<div class="level">
+    <div class="level-left"><h2 class="subtitle">Customers</h2></div>
+    <div class="level-right"><a class="button is-primary" href="{% url 'customer-create' %}">New Customer</a></div>
+</div>
+<table class="table is-fullwidth">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for customer in object_list %}
+            <tr>
+                <td>{{ customer.first_name }} {{ customer.last_name }}</td>
+                <td>{{ customer.email }}</td>
+                <td>{{ customer.phone_number }}</td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="3">No customers found.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
