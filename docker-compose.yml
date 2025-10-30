@@ -18,7 +18,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: bash -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    command: bash -c "python bookstore/manage.py migrate && python bookstore/manage.py runserver 0.0.0.0:8000"
     volumes:
       - .:/app
     environment:
