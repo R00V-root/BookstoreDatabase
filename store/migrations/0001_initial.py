@@ -25,10 +25,6 @@ class Migration(migrations.Migration):
             ],
             options={"db_table": "authors", "ordering": ["last_name", "first_name"], "unique_together": {("first_name", "last_name")}},
         ),
-        migrations.AddIndex(
-            model_name="address",
-            index=models.Index(fields=["postal_code", "country"], name="addresses_postal_idx"),
-        ),
         migrations.CreateModel(
             name="Publisher",
             fields=[
@@ -40,10 +36,6 @@ class Migration(migrations.Migration):
                 ("email", models.EmailField(blank=True, max_length=254)),
             ],
             options={"db_table": "publishers", "ordering": ["name"]},
-        ),
-        migrations.AddIndex(
-            model_name="order",
-            index=models.Index(fields=["customer", "created_at"], name="orders_customer_created_idx"),
         ),
         migrations.CreateModel(
             name="Category",
@@ -96,6 +88,10 @@ class Migration(migrations.Migration):
                 ),
             ],
             options={"db_table": "addresses"},
+        ),
+        migrations.AddIndex(
+            model_name="address",
+            index=models.Index(fields=["postal_code", "country"], name="addresses_postal_idx"),
         ),
         migrations.CreateModel(
             name="Book",
@@ -182,6 +178,10 @@ class Migration(migrations.Migration):
                 ),
             ],
             options={"db_table": "orders"},
+        ),
+        migrations.AddIndex(
+            model_name="order",
+            index=models.Index(fields=["customer", "created_at"], name="orders_customer_created_idx"),
         ),
         migrations.CreateModel(
             name="AuditLog",
