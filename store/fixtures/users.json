@@ -6,7 +6,7 @@
       "username": "admin",
       "is_staff": true,
       "is_superuser": true,
-      "password": "pbkdf2_sha256$390000$A9bPpoEByOw9pwb$CuWHa3gwxM/H2ymlk/wEYBLETymFcpnSUsctNk6heAQ=",
+      "password": "pbkdf2_sha256$600000$iiGTXplJzReW5RMuZHHQCo$tyjnc4R8GH5p/2dfVS8+17pcmbVj5OtKc3/Hqk14dOM=",
       "email": "admin@example.com",
       "groups": [
         2
@@ -19,7 +19,7 @@
     "fields": {
       "username": "employee",
       "is_staff": true,
-      "password": "pbkdf2_sha256$390000$A9bPpoEByOw9pwb$CuWHa3gwxM/H2ymlk/wEYBLETymFcpnSUsctNk6heAQ=",
+      "password": "pbkdf2_sha256$600000$Owk9RQodbTB7U9o4VUdeVg$nGm8F8k9cDgv+iqRx/eu5+FrFIQI/sbBjWQJEYo2MCc=",
       "email": "employee@example.com",
       "groups": [
         1

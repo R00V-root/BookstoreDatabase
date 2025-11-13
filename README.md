@@ -35,7 +35,7 @@ Load demo credentials once the stack is running:
 
 ```bash
 docker-compose run --rm web python bookstore/manage.py loaddata \
-    store/fixtures/groups.json store/fixtures/users.json store/fixtures/user_groups.json
+    store/fixtures/groups.json store/fixtures/users.json
 docker-compose run --rm web python bookstore/manage.py bootstrap_roles
 ```
 
@@ -55,7 +55,7 @@ Initial extensions (`pg_trgm`, `pgcrypto`) are created via `db/init/01_extension
 To apply manual schema changes outside of Django ORM, run:
 
 ```bash
-docker-compose run --rm db psql -U $POSTGRES_USER -d $POSTGRES_DB -f /app/db/schema.sql
+docker-compose exec -T db psql -U $POSTGRES_USER -d $POSTGRES_DB < db/schema.sql
 ```
 
 ## Synthetic Data
@@ -77,6 +77,12 @@ docker-compose run --rm web pytest
 ## Backup & Restore
 
 Use the provided scripts (see `db/backup.sh` and `db/restore.sh`) to snapshot and restore the database.
+
+## Troubleshooting
+
+### Why is there a container named `clever_mendeleev`?
+
+Docker automatically assigns whimsical names to containers when you start one without explicitly providing a `--name` flag. When you run commands such as `docker-compose run --rm web …`, Docker Compose asks the engine to launch an auxiliary container for the one-off task and Docker picks a random name from its internal generator. Seeing a container called `clever_mendeleev` (or similar) simply means one of those helper containers is active; it is not an extra service the project created. The container will disappear once the command finishes when you use `--rm`, or you can stop it manually with `docker stop clever_mendeleev` if it was started without that flag.
 
 ## Demo Flow
 
