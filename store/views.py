@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from decimal import Decimal
 
 from django.contrib import messages
 from django.contrib.auth import authenticate
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.auth.views import LoginView
 from django.db import transaction
+from django.db.models import Avg, Count, Max, Prefetch, Sum
+from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.utils import timezone
@@ -46,6 +49,52 @@ class CustomerCreateView(LoginRequiredMixin, PermissionRequiredMixin, generic.Cr
     template_name = "store/customer_form.html"
     permission_required = "store.add_customer"
     success_url = reverse_lazy("customer-list")
+
+
+class CustomerDetailView(LoginRequiredMixin, PermissionRequiredMixin, generic.DetailView):
+    model = Customer
+    template_name = "store/customer_detail.html"
+    permission_required = "store.view_customer"
+
+    def get_queryset(self):  # type: ignore[override]
+        return Customer.objects.prefetch_related(
+            Prefetch(
+                "orders",
+                queryset=Order.objects.prefetch_related("lines__book").order_by("-placed_at"),
+            )
+        )
+
+    def get_context_data(self, **kwargs):  # type: ignore[override]
+        context = super().get_context_data(**kwargs)
+        sort = self.request.GET.get("sort", "recent")
+        ordering_options = {
+            "recent": "-placed_at",
+            "oldest": "placed_at",
+            "spend": "-total_amount",
+            "status": "status",
+        }
+        ordering = ordering_options.get(sort, "-placed_at")
+
+        orders_qs = self.object.orders.prefetch_related("lines__book")
+        context["orders"] = orders_qs.order_by(ordering)
+
+        aggregates = orders_qs.aggregate(
+            total_spend=Coalesce(Sum("total_amount"), Decimal("0.00")),
+            order_count=Count("id"),
+            average_order=Coalesce(Avg("total_amount"), Decimal("0.00")),
+            last_purchase=Max("placed_at"),
+        )
+
+        context.update(
+            {
+                "total_spend": aggregates["total_spend"],
+                "order_count": aggregates["order_count"],
+                "average_order": aggregates["average_order"],
+                "last_purchase": aggregates["last_purchase"],
+                "current_sort": sort if sort in ordering_options else "recent",
+            }
+        )
+        return context
 
 
 class BookListView(LoginRequiredMixin, PermissionRequiredMixin, generic.ListView):

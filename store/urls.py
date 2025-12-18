@@ -11,6 +11,7 @@ urlpatterns = [
     path("hub/", views.NavigationHubView.as_view(), name="hub"),
     path("customers/", views.CustomerListView.as_view(), name="customer-list"),
     path("customers/new/", views.CustomerCreateView.as_view(), name="customer-create"),
+    path("customers/<int:pk>/", views.CustomerDetailView.as_view(), name="customer-detail"),
     path("books/", views.BookListView.as_view(), name="book-list"),
     path("books/new/", views.BookCreateView.as_view(), name="book-create"),
     path("publishers/", views.PublisherListView.as_view(), name="publisher-list"),
