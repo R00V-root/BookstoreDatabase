@@ -17,7 +17,5 @@ class BookForm(forms.ModelForm):
             "format",
             "price",
             "currency",
-            "weight_grams",
-            "dimensions",
             "publisher",
         ]
