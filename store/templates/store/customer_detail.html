@@ -1,0 +1,105 @@
+{% extends 'store/base.html' %}
+{% block title %}Customer Details{% endblock %}
+{% block content %}
+<div class="level">
+    <div class="level-left">
+        <div>
+            <h2 class="title is-4">{{ object.first_name }} {{ object.last_name }}</h2>
+            <p class="subtitle is-6">{{ object.email }}{% if object.phone_number %} • {{ object.phone_number }}{% endif %}</p>
+        </div>
+    </div>
+    <div class="level-right">
+        <div class="field">
+            <label class="label">Order sorting</label>
+            <div class="control">
+                <div class="select">
+                    <select name="sort" onchange="location = '?sort=' + this.value;">
+                        <option value="recent" {% if current_sort == 'recent' %}selected{% endif %}>Latest orders</option>
+                        <option value="oldest" {% if current_sort == 'oldest' %}selected{% endif %}>Oldest orders</option>
+                        <option value="spend" {% if current_sort == 'spend' %}selected{% endif %}>Highest spend</option>
+                        <option value="status" {% if current_sort == 'status' %}selected{% endif %}>Status</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="columns">
+    <div class="column">
+        <div class="box has-background-light">
+            <p class="heading">Lifetime Spend</p>
+            <p class="title is-4">${{ total_spend|floatformat:2 }}</p>
+        </div>
+    </div>
+    <div class="column">
+        <div class="box has-background-light">
+            <p class="heading">Order Count</p>
+            <p class="title is-4">{{ order_count }}</p>
+        </div>
+    </div>
+    <div class="column">
+        <div class="box has-background-light">
+            <p class="heading">Average Order Value</p>
+            <p class="title is-4">${{ average_order|floatformat:2 }}</p>
+        </div>
+    </div>
+    <div class="column">
+        <div class="box has-background-light">
+            <p class="heading">Most Recent Purchase</p>
+            <p class="title is-4">{% if last_purchase %}{{ last_purchase|date:"Y-m-d H:i" }}{% else %}N/A{% endif %}</p>
+        </div>
+    </div>
+</div>
+
+<h3 class="title is-5">Order History</h3>
+{% if orders %}
+    <div class="table-container">
+        <table class="table is-fullwidth is-striped">
+            <thead>
+                <tr>
+                    <th>Order #</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Lines</th>
+                    <th class="has-text-right">Order Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                    <tr>
+                        <td><a href="{% url 'invoice-update' order.pk %}">{{ order.order_number }}</a></td>
+                        <td>{{ order.placed_at|date:"Y-m-d H:i" }}</td>
+                        <td>{{ order.get_status_display }}</td>
+                        <td>
+                            <table class="table is-fullwidth is-narrow">
+                                <thead>
+                                    <tr>
+                                        <th>Book</th>
+                                        <th class="has-text-right">Quantity</th>
+                                        <th class="has-text-right">Unit Price</th>
+                                        <th class="has-text-right">Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for line in order.lines.all %}
+                                        <tr>
+                                            <td><a href="{% url 'book-list' %}?book={{ line.book.pk }}">{{ line.book.title }}</a></td>
+                                            <td class="has-text-right">{{ line.quantity }}</td>
+                                            <td class="has-text-right">${{ line.unit_price|floatformat:2 }}</td>
+                                            <td class="has-text-right">${{ line.subtotal|floatformat:2 }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </td>
+                        <td class="has-text-right has-text-weight-semibold">${{ order.total_amount|floatformat:2 }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <p>No orders found for this customer.</p>
+{% endif %}
+{% endblock %}
