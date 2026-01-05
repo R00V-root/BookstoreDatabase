@@ -3,14 +3,97 @@
 {% block content %}
 <form method="post" class="box">
     {% csrf_token %}
-    {{ form.as_p }}
+    {{ form.non_field_errors }}
+    <h3 class="subtitle">Order Details</h3>
+    <table class="table is-fullwidth is-striped">
+        <tbody>
+            <tr>
+                <th>{{ form.order_number.label_tag }}</th>
+                <td>
+                    {{ form.order_number }}
+                    {{ form.order_number.errors }}
+                </td>
+                <th>{{ form.customer.label_tag }}</th>
+                <td>
+                    {{ form.customer }}
+                    {{ form.customer.errors }}
+                </td>
+            </tr>
+            <tr>
+                <th>{{ form.status.label_tag }}</th>
+                <td>
+                    {{ form.status }}
+                    {{ form.status.errors }}
+                </td>
+                <th>{{ form.placed_at.label_tag }}</th>
+                <td>
+                    {{ form.placed_at }}
+                    {{ form.placed_at.errors }}
+                </td>
+            </tr>
+            <tr>
+                <th>{{ form.total_amount.label_tag }}</th>
+                <td colspan="3">
+                    {{ form.total_amount }}
+                    {{ form.total_amount.errors }}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
     <h3 class="subtitle">Invoice Lines</h3>
     {{ lines.management_form }}
-    {% for form in lines %}
-        <div class="box">
-            {{ form.as_p }}
-        </div>
-    {% endfor %}
+    <table class="table is-fullwidth is-hoverable">
+        <thead>
+            <tr>
+                <th>Book</th>
+                <th>Quantity</th>
+                <th>Unit Price</th>
+                <th>Subtotal</th>
+                <th>Delete</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for form in lines %}
+                <tr>
+                    <td>
+                        {{ form.book }}
+                        {{ form.book.errors }}
+                    </td>
+                    <td>
+                        {{ form.quantity }}
+                        {{ form.quantity.errors }}
+                    </td>
+                    <td>
+                        {{ form.unit_price }}
+                        {{ form.unit_price.errors }}
+                    </td>
+                    <td>
+                        {% if form.instance.pk %}
+                            {{ form.instance.subtotal }}
+                        {% else %}
+                            --
+                        {% endif %}
+                    </td>
+                    <td>
+                        {{ form.DELETE }}
+                        {{ form.DELETE.errors }}
+                    </td>
+                </tr>
+                {% if form.non_field_errors %}
+                    <tr>
+                        <td colspan="5">{{ form.non_field_errors }}</td>
+                    </tr>
+                {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="notification is-info is-light">
+        <strong>Total Amount:</strong>
+        {{ form.total_amount.value|default:"0.00" }}
+    </div>
+
     <button class="button is-primary" type="submit">Save</button>
 </form>
 {% endblock %}
