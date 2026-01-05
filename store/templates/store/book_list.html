@@ -11,6 +11,8 @@
             <th>Title</th>
             <th>ISBN</th>
             <th>Publisher</th>
+            <th>Authors</th>
+            <th>Categories</th>
             <th>Price</th>
         </tr>
     </thead>
@@ -20,10 +22,24 @@
                 <td><a href="{% url 'book-detail' book.pk %}">{{ book.title }}</a></td>
                 <td>{{ book.isbn }}</td>
                 <td>{{ book.publisher.name }}</td>
+                <td>
+                    {% for book_author in book.book_authors.all %}
+                        {{ book_author.author.first_name }} {{ book_author.author.last_name }}{% if not forloop.last %}, {% endif %}
+                    {% empty %}
+                        <span class="has-text-grey">None</span>
+                    {% endfor %}
+                </td>
+                <td>
+                    {% for book_category in book.book_categories.all %}
+                        {{ book_category.category.name }}{% if not forloop.last %}, {% endif %}
+                    {% empty %}
+                        <span class="has-text-grey">None</span>
+                    {% endfor %}
+                </td>
                 <td>{{ book.price }} {{ book.currency }}</td>
             </tr>
         {% empty %}
-            <tr><td colspan="4">No books found.</td></tr>
+            <tr><td colspan="6">No books found.</td></tr>
         {% endfor %}
     </tbody>
 </table>

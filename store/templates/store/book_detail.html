@@ -40,6 +40,38 @@
     </div>
 </div>
 
+<div class="columns">
+    <div class="column">
+        <h3 class="title is-5">Authors</h3>
+        {% if authors %}
+            <ul>
+                {% for book_author in authors %}
+                    <li>
+                        {{ book_author.author.first_name }} {{ book_author.author.last_name }}
+                        {% if book_author.contribution %}
+                            <span class="has-text-grey">({{ book_author.contribution }})</span>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No authors listed.</p>
+        {% endif %}
+    </div>
+    <div class="column">
+        <h3 class="title is-5">Categories</h3>
+        {% if categories %}
+            <ul>
+                {% for book_category in categories %}
+                    <li>{{ book_category.category.name }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No categories assigned.</p>
+        {% endif %}
+    </div>
+</div>
+
 <h3 class="title is-5">Customers Who Purchased</h3>
 {% if customer_report %}
     <div class="table-container">
