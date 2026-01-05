@@ -101,6 +101,12 @@ class BookListView(LoginRequiredMixin, PermissionRequiredMixin, generic.ListView
     template_name = "store/book_list.html"
     permission_required = "store.view_book"
 
+    def get_queryset(self):  # type: ignore[override]
+        return Book.objects.select_related("publisher").prefetch_related(
+            "book_authors__author",
+            "book_categories__category",
+        )
+
 
 class BookDetailView(LoginRequiredMixin, PermissionRequiredMixin, generic.DetailView):
     model = Book
@@ -109,6 +115,8 @@ class BookDetailView(LoginRequiredMixin, PermissionRequiredMixin, generic.Detail
 
     def get_queryset(self):  # type: ignore[override]
         return Book.objects.select_related("publisher").prefetch_related(
+            "book_authors__author",
+            "book_categories__category",
             Prefetch(
                 "order_lines",
                 queryset=OrderLine.objects.select_related("order", "order__customer").annotate(
@@ -121,6 +129,13 @@ class BookDetailView(LoginRequiredMixin, PermissionRequiredMixin, generic.Detail
         context = super().get_context_data(**kwargs)
         book = self.object
         book_filter = Q(orders__lines__book=book)
+        context["authors"] = book.book_authors.select_related("author").order_by(
+            "author__last_name",
+            "author__first_name",
+        )
+        context["categories"] = book.book_categories.select_related("category").order_by(
+            "category__name"
+        )
         context["customer_report"] = (
             Customer.objects.filter(book_filter)
             .annotate(
