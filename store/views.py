@@ -16,7 +16,16 @@ from django.utils import timezone
 from django.views import generic
 
 from store.forms import BookForm, CustomerForm, OrderForm, OrderLineFormSet
-from store.models import Book, Customer, Order, OrderLine, OrderStatus, Publisher
+from store.models import (
+    Book,
+    Customer,
+    Inventory,
+    Order,
+    OrderLine,
+    OrderStatus,
+    Publisher,
+    Warehouse,
+)
 
 
 class EmployeeLoginView(LoginView):
@@ -114,7 +123,8 @@ class BookDetailView(LoginRequiredMixin, PermissionRequiredMixin, generic.Detail
                 queryset=OrderLine.objects.select_related("order", "order__customer").annotate(
                     line_subtotal=F("quantity") * F("book__price")
                 ).order_by("-order__placed_at"),
-            )
+            ),
+            "inventory__warehouse__address",
         )
 
     def get_context_data(self, **kwargs):  # type: ignore[override]
@@ -130,6 +140,9 @@ class BookDetailView(LoginRequiredMixin, PermissionRequiredMixin, generic.Detail
             .order_by("last_name", "first_name")
         )
         context["order_lines"] = book.order_lines.all()
+        context["inventory_entries"] = book.inventory.select_related(
+            "warehouse__address"
+        ).order_by("warehouse__code")
         return context
 
 
@@ -139,6 +152,31 @@ class BookCreateView(LoginRequiredMixin, PermissionRequiredMixin, generic.Create
     template_name = "store/book_form.html"
     permission_required = "store.add_book"
     success_url = reverse_lazy("book-list")
+
+
+class WarehouseListView(LoginRequiredMixin, PermissionRequiredMixin, generic.ListView):
+    model = Warehouse
+    template_name = "store/warehouse_list.html"
+    permission_required = "store.view_warehouse"
+
+    def get_queryset(self):  # type: ignore[override]
+        return Warehouse.objects.select_related("address").order_by("code")
+
+
+class WarehouseDetailView(LoginRequiredMixin, PermissionRequiredMixin, generic.DetailView):
+    model = Warehouse
+    template_name = "store/warehouse_detail.html"
+    permission_required = "store.view_warehouse"
+
+    def get_queryset(self):  # type: ignore[override]
+        return Warehouse.objects.select_related("address").prefetch_related("inventory__book")
+
+    def get_context_data(self, **kwargs):  # type: ignore[override]
+        context = super().get_context_data(**kwargs)
+        context["inventory_entries"] = Inventory.objects.filter(
+            warehouse=self.object
+        ).select_related("book").order_by("book__title")
+        return context
 
 
 class PublisherListView(LoginRequiredMixin, PermissionRequiredMixin, generic.ListView):

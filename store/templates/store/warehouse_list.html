@@ -1,0 +1,33 @@
+{% extends 'store/base.html' %}
+{% block title %}Warehouses{% endblock %}
+{% block content %}
+<div class="level">
+    <div class="level-left"><h2 class="subtitle">Warehouses</h2></div>
+</div>
+<div class="table-container">
+    <table class="table is-fullwidth">
+        <thead>
+            <tr>
+                <th>Code</th>
+                <th>Name</th>
+                <th>Address</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for warehouse in object_list %}
+                <tr>
+                    <td><a href="{% url 'warehouse-detail' warehouse.pk %}">{{ warehouse.code }}</a></td>
+                    <td>{{ warehouse.name }}</td>
+                    <td>
+                        {{ warehouse.address.line1 }}{% if warehouse.address.line2 %}, {{ warehouse.address.line2 }}{% endif %}<br>
+                        {{ warehouse.address.city }}, {{ warehouse.address.state }} {{ warehouse.address.postal_code }}<br>
+                        {{ warehouse.address.country }}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="3">No warehouses found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
