@@ -8,7 +8,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.auth.views import LoginView
 from django.db import transaction
-from django.db.models import Avg, Count, F, Max, Prefetch, Q, Sum
+from django.db.models import Avg, Count, DecimalField, ExpressionWrapper, F, Max, Prefetch, Q, Sum
 from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
@@ -250,4 +250,49 @@ class InvoiceReportView(LoginRequiredMixin, PermissionRequiredMixin, generic.Tem
         context = super().get_context_data(**kwargs)
         one_week_ago = timezone.now() - timedelta(days=7)
         context["orders"] = Order.objects.filter(placed_at__gte=one_week_ago).order_by("-placed_at")
+        customer_totals = (
+            Customer.objects.annotate(total_spend=Coalesce(Sum("orders__total_amount"), Decimal("0.00")))
+            .order_by("-total_spend", "last_name", "first_name")[:10]
+        )
+        total_customer_spend = sum((customer.total_spend for customer in customer_totals), Decimal("0.00"))
+        customer_spend = [
+            {
+                "customer": customer,
+                "total_spend": customer.total_spend,
+                "share_percent": (
+                    (customer.total_spend / total_customer_spend) * Decimal("100.0")
+                    if total_customer_spend
+                    else Decimal("0.0")
+                ),
+            }
+            for customer in customer_totals
+        ]
+        vendor_line_revenue = ExpressionWrapper(
+            F("books__order_lines__quantity") * F("books__order_lines__unit_price"),
+            output_field=DecimalField(max_digits=12, decimal_places=2),
+        )
+        vendor_totals = (
+            Publisher.objects.annotate(revenue=Coalesce(Sum(vendor_line_revenue), Decimal("0.00")))
+            .order_by("-revenue", "name")
+            .all()
+        )
+        total_vendor_spend = sum((vendor.revenue for vendor in vendor_totals), Decimal("0.00"))
+        vendor_revenue = [
+            {
+                "vendor": vendor,
+                "revenue": vendor.revenue,
+                "share_percent": (
+                    (vendor.revenue / total_vendor_spend) * Decimal("100.0")
+                    if total_vendor_spend
+                    else Decimal("0.0")
+                ),
+            }
+            for vendor in vendor_totals
+        ]
+        context.update(
+            {
+                "top_customers": customer_spend,
+                "vendor_revenue": vendor_revenue,
+            }
+        )
         return context
