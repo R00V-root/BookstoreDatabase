@@ -40,7 +40,6 @@ class CustomerListView(LoginRequiredMixin, PermissionRequiredMixin, generic.List
     model = Customer
     template_name = "store/customer_list.html"
     permission_required = "store.view_customer"
-    paginate_by = 20
 
 
 class CustomerCreateView(LoginRequiredMixin, PermissionRequiredMixin, generic.CreateView):
@@ -101,7 +100,6 @@ class BookListView(LoginRequiredMixin, PermissionRequiredMixin, generic.ListView
     model = Book
     template_name = "store/book_list.html"
     permission_required = "store.view_book"
-    paginate_by = 20
 
 
 class BookDetailView(LoginRequiredMixin, PermissionRequiredMixin, generic.DetailView):
