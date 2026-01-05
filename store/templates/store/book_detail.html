@@ -40,6 +40,36 @@
     </div>
 </div>
 
+<h3 class="title is-5">Inventory by Warehouse</h3>
+{% if inventory_entries %}
+    <div class="table-container">
+        <table class="table is-fullwidth is-striped">
+            <thead>
+                <tr>
+                    <th>Warehouse</th>
+                    <th>Address</th>
+                    <th class="has-text-right">Quantity</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in inventory_entries %}
+                    <tr>
+                        <td><a href="{% url 'warehouse-detail' entry.warehouse.pk %}">{{ entry.warehouse.code }}</a></td>
+                        <td>
+                            {{ entry.warehouse.address.line1 }}{% if entry.warehouse.address.line2 %}, {{ entry.warehouse.address.line2 }}{% endif %}<br>
+                            {{ entry.warehouse.address.city }}, {{ entry.warehouse.address.state }} {{ entry.warehouse.address.postal_code }}<br>
+                            {{ entry.warehouse.address.country }}
+                        </td>
+                        <td class="has-text-right">{{ entry.quantity }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <p>No inventory entries recorded for this book.</p>
+{% endif %}
+
 <h3 class="title is-5">Customers Who Purchased</h3>
 {% if customer_report %}
     <div class="table-container">

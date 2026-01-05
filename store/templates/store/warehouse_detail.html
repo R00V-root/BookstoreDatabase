@@ -1,0 +1,50 @@
+{% extends 'store/base.html' %}
+{% block title %}Warehouse Details{% endblock %}
+{% block content %}
+<div class="level">
+    <div class="level-left">
+        <div>
+            <h2 class="title is-4">{{ object.name }}</h2>
+            <p class="subtitle is-6">{{ object.code }}</p>
+        </div>
+    </div>
+    <div class="level-right">
+        <a class="button" href="{% url 'warehouse-list' %}">Back to warehouses</a>
+    </div>
+</div>
+
+<div class="box has-background-light">
+    <p class="heading">Address</p>
+    <p>
+        {{ object.address.line1 }}{% if object.address.line2 %}, {{ object.address.line2 }}{% endif %}<br>
+        {{ object.address.city }}, {{ object.address.state }} {{ object.address.postal_code }}<br>
+        {{ object.address.country }}
+    </p>
+</div>
+
+<h3 class="title is-5">Inventory</h3>
+{% if inventory_entries %}
+    <div class="table-container">
+        <table class="table is-fullwidth is-striped">
+            <thead>
+                <tr>
+                    <th>Book</th>
+                    <th>ISBN</th>
+                    <th class="has-text-right">Quantity</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in inventory_entries %}
+                    <tr>
+                        <td><a href="{% url 'book-detail' item.book.pk %}">{{ item.book.title }}</a></td>
+                        <td>{{ item.book.isbn }}</td>
+                        <td class="has-text-right">{{ item.quantity }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <p>No inventory recorded for this warehouse.</p>
+{% endif %}
+{% endblock %}
