@@ -6,6 +6,11 @@
     <p><strong>Email:</strong> {{ object.email }}</p>
     <p><strong>Website:</strong> {{ object.website }}</p>
 </div>
+<div class="level">
+    <div class="level-left">
+        <a class="button" href="{% url 'publisher-list' %}">Back to vendors</a>
+    </div>
+</div>
 <h3 class="subtitle">Products</h3>
 <table class="table is-fullwidth">
     <thead>
@@ -13,6 +18,8 @@
             <th>Title</th>
             <th>ISBN</th>
             <th>Price</th>
+            <th>Authors</th>
+            <th>Categories</th>
         </tr>
     </thead>
     <tbody>
@@ -21,9 +28,27 @@
                 <td><a href="{% url 'book-detail' book.pk %}">{{ book.title }}</a></td>
                 <td>{{ book.isbn }}</td>
                 <td>{{ book.price }} {{ book.currency }}</td>
+                <td>
+                    {% for book_author in book.book_authors.all %}
+                        <a href="{% url 'author-detail' book_author.author.pk %}">
+                            {{ book_author.author.first_name }} {{ book_author.author.last_name }}
+                        </a>{% if not forloop.last %}, {% endif %}
+                    {% empty %}
+                        <span class="has-text-grey">No authors</span>
+                    {% endfor %}
+                </td>
+                <td>
+                    {% for book_category in book.book_categories.all %}
+                        <a href="{% url 'category-detail' book_category.category.pk %}">
+                            {{ book_category.category.name }}
+                        </a>{% if not forloop.last %}, {% endif %}
+                    {% empty %}
+                        <span class="has-text-grey">No categories</span>
+                    {% endfor %}
+                </td>
             </tr>
         {% empty %}
-            <tr><td colspan="3">No books for this vendor.</td></tr>
+            <tr><td colspan="5">No books for this vendor.</td></tr>
         {% endfor %}
     </tbody>
 </table>

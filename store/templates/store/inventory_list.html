@@ -1,10 +1,7 @@
 {% extends 'store/base.html' %}
-{% block title %}Books{% endblock %}
+{% block title %}Inventory{% endblock %}
 {% block content %}
-<div class="level">
-    <div class="level-left"><h2 class="subtitle">Books</h2></div>
-    <div class="level-right"><a class="button is-primary" href="{% url 'book-create' %}">Add Book</a></div>
-</div>
+<h2 class="subtitle">Inventory</h2>
 <form method="get" class="box">
     <div class="columns is-multiline">
         <div class="column is-one-quarter">
@@ -60,29 +57,30 @@
     <div class="level">
         <div class="level-left">
             <button class="button is-link" type="submit">Apply filters</button>
-            <a class="button" href="{% url 'book-list' %}">Reset</a>
+            <a class="button" href="{% url 'inventory-list' %}">Reset</a>
         </div>
     </div>
 </form>
 <table class="table is-fullwidth">
     <thead>
         <tr>
-            <th>Title</th>
-            <th>ISBN</th>
+            <th>Book</th>
+            <th>Record</th>
             <th>Publisher</th>
             <th>Authors</th>
             <th>Categories</th>
-            <th>Price</th>
+            <th>Warehouse</th>
+            <th class="has-text-right">Quantity</th>
         </tr>
     </thead>
     <tbody>
-        {% for book in object_list %}
+        {% for stock in object_list %}
             <tr>
-                <td><a href="{% url 'book-detail' book.pk %}">{{ book.title }}</a></td>
-                <td>{{ book.isbn }}</td>
-                <td><a href="{% url 'publisher-detail' book.publisher.pk %}">{{ book.publisher.name }}</a></td>
+                <td><a href="{% url 'book-detail' stock.book.pk %}">{{ stock.book.title }}</a></td>
+                <td><a href="{% url 'inventory-detail' stock.pk %}">View</a></td>
+                <td><a href="{% url 'publisher-detail' stock.book.publisher.pk %}">{{ stock.book.publisher.name }}</a></td>
                 <td>
-                    {% for book_author in book.book_authors.all %}
+                    {% for book_author in stock.book.book_authors.all %}
                         <a href="{% url 'author-detail' book_author.author.pk %}">
                             {{ book_author.author.first_name }} {{ book_author.author.last_name }}
                         </a>{% if not forloop.last %}, {% endif %}
@@ -91,7 +89,7 @@
                     {% endfor %}
                 </td>
                 <td>
-                    {% for book_category in book.book_categories.all %}
+                    {% for book_category in stock.book.book_categories.all %}
                         <a href="{% url 'category-detail' book_category.category.pk %}">
                             {{ book_category.category.name }}
                         </a>{% if not forloop.last %}, {% endif %}
@@ -99,10 +97,11 @@
                         <span class="has-text-grey">No categories</span>
                     {% endfor %}
                 </td>
-                <td>{{ book.price }} {{ book.currency }}</td>
+                <td>{{ stock.warehouse.code }}</td>
+                <td class="has-text-right">{{ stock.quantity }}</td>
             </tr>
         {% empty %}
-            <tr><td colspan="6">No books found.</td></tr>
+            <tr><td colspan="7">No inventory records found.</td></tr>
         {% endfor %}
     </tbody>
 </table>

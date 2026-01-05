@@ -5,11 +5,54 @@
     <div class="level-left">
         <div>
             <h2 class="title is-4">{{ object.title }}</h2>
-            <p class="subtitle is-6">ISBN {{ object.isbn }} • {{ object.publisher.name }}</p>
+            <p class="subtitle is-6">
+                ISBN {{ object.isbn }} •
+                <a href="{% url 'publisher-detail' object.publisher.pk %}">{{ object.publisher.name }}</a>
+            </p>
         </div>
     </div>
     <div class="level-right">
         <a class="button" href="{% url 'book-list' %}">Back to books</a>
+    </div>
+</div>
+
+<div class="columns">
+    <div class="column">
+        <div class="box">
+            <h3 class="subtitle is-6">Authors</h3>
+            {% if object.book_authors.all %}
+                <ul>
+                    {% for book_author in object.book_authors.all %}
+                        <li>
+                            <a href="{% url 'author-detail' book_author.author.pk %}">
+                                {{ book_author.author.first_name }} {{ book_author.author.last_name }}
+                            </a>
+                            {% if book_author.contribution %}({{ book_author.contribution }}){% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No authors listed.</p>
+            {% endif %}
+        </div>
+    </div>
+    <div class="column">
+        <div class="box">
+            <h3 class="subtitle is-6">Categories</h3>
+            {% if object.book_categories.all %}
+                <ul>
+                    {% for book_category in object.book_categories.all %}
+                        <li>
+                            <a href="{% url 'category-detail' book_category.category.pk %}">
+                                {{ book_category.category.name }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No categories assigned.</p>
+            {% endif %}
+        </div>
     </div>
 </div>
 

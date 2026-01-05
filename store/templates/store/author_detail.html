@@ -1,0 +1,51 @@
+{% extends 'store/base.html' %}
+{% block title %}Author Detail{% endblock %}
+{% block content %}
+<div class="level">
+    <div class="level-left">
+        <div>
+            <h2 class="title is-4">{{ object.first_name }} {{ object.last_name }}</h2>
+            {% if object.biography %}
+                <p class="subtitle is-6">{{ object.biography }}</p>
+            {% endif %}
+        </div>
+    </div>
+    <div class="level-right">
+        <a class="button" href="{% url 'author-list' %}">Back to authors</a>
+    </div>
+</div>
+
+<div class="columns">
+    <div class="column">
+        <div class="box">
+            <h3 class="subtitle is-6">Books</h3>
+            {% if books %}
+                <ul>
+                    {% for book in books %}
+                        <li>
+                            <a href="{% url 'book-detail' book.pk %}">{{ book.title }}</a>
+                            — <a href="{% url 'publisher-detail' book.publisher.pk %}">{{ book.publisher.name }}</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No books linked to this author.</p>
+            {% endif %}
+        </div>
+    </div>
+    <div class="column">
+        <div class="box">
+            <h3 class="subtitle is-6">Categories</h3>
+            {% if categories %}
+                <ul>
+                    {% for category in categories %}
+                        <li><a href="{% url 'category-detail' category.pk %}">{{ category.name }}</a></li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No categories linked to this author.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

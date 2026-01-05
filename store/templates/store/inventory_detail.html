@@ -1,0 +1,65 @@
+{% extends 'store/base.html' %}
+{% block title %}Inventory Detail{% endblock %}
+{% block content %}
+<div class="level">
+    <div class="level-left">
+        <div>
+            <h2 class="title is-4">
+                <a href="{% url 'book-detail' object.book.pk %}">{{ object.book.title }}</a>
+            </h2>
+            <p class="subtitle is-6">
+                <a href="{% url 'publisher-detail' object.book.publisher.pk %}">{{ object.book.publisher.name }}</a>
+                • Warehouse {{ object.warehouse.code }}
+            </p>
+        </div>
+    </div>
+    <div class="level-right">
+        <a class="button" href="{% url 'inventory-list' %}">Back to inventory</a>
+    </div>
+</div>
+
+<div class="columns">
+    <div class="column">
+        <div class="box has-background-light">
+            <p class="heading">Quantity</p>
+            <p class="title is-4">{{ object.quantity }}</p>
+        </div>
+    </div>
+    <div class="column">
+        <div class="box">
+            <h3 class="subtitle is-6">Authors</h3>
+            {% if object.book.book_authors.all %}
+                <ul>
+                    {% for book_author in object.book.book_authors.all %}
+                        <li>
+                            <a href="{% url 'author-detail' book_author.author.pk %}">
+                                {{ book_author.author.first_name }} {{ book_author.author.last_name }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No authors linked to this book.</p>
+            {% endif %}
+        </div>
+    </div>
+    <div class="column">
+        <div class="box">
+            <h3 class="subtitle is-6">Categories</h3>
+            {% if object.book.book_categories.all %}
+                <ul>
+                    {% for book_category in object.book.book_categories.all %}
+                        <li>
+                            <a href="{% url 'category-detail' book_category.category.pk %}">
+                                {{ book_category.category.name }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No categories linked to this book.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

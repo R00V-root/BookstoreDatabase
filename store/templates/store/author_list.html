@@ -1,17 +1,17 @@
 {% extends 'store/base.html' %}
-{% block title %}Vendors{% endblock %}
+{% block title %}Authors{% endblock %}
 {% block content %}
-<h2 class="subtitle">Publishers</h2>
+<h2 class="subtitle">Authors</h2>
 <form method="get" class="box">
     <div class="columns">
         <div class="column">
-            <label class="label" for="author">Author</label>
+            <label class="label" for="publisher">Publisher</label>
             <div class="select is-fullwidth">
-                <select id="author" name="author">
-                    <option value="">All authors</option>
-                    {% for author in authors %}
-                        <option value="{{ author.id }}" {% if selected_author == author.id|stringformat:"s" %}selected{% endif %}>
-                            {{ author.first_name }} {{ author.last_name }}
+                <select id="publisher" name="publisher">
+                    <option value="">All publishers</option>
+                    {% for publisher in publishers %}
+                        <option value="{{ publisher.id }}" {% if selected_publisher == publisher.id|stringformat:"s" %}selected{% endif %}>
+                            {{ publisher.name }}
                         </option>
                     {% endfor %}
                 </select>
@@ -34,7 +34,7 @@
     <div class="level">
         <div class="level-left">
             <button class="button is-link" type="submit">Apply filters</button>
-            <a class="button" href="{% url 'publisher-list' %}">Reset</a>
+            <a class="button" href="{% url 'author-list' %}">Reset</a>
         </div>
     </div>
 </form>
@@ -42,19 +42,17 @@
     <thead>
         <tr>
             <th>Name</th>
-            <th>Website</th>
-            <th>Email</th>
+            <th>Books</th>
         </tr>
     </thead>
     <tbody>
-        {% for publisher in object_list %}
+        {% for author in object_list %}
             <tr>
-                <td><a href="{% url 'publisher-detail' publisher.pk %}">{{ publisher.name }}</a></td>
-                <td>{{ publisher.website }}</td>
-                <td>{{ publisher.email }}</td>
+                <td><a href="{% url 'author-detail' author.pk %}">{{ author.first_name }} {{ author.last_name }}</a></td>
+                <td>{{ author.book_count }}</td>
             </tr>
         {% empty %}
-            <tr><td colspan="3">No vendors found.</td></tr>
+            <tr><td colspan="2">No authors found.</td></tr>
         {% endfor %}
     </tbody>
 </table>
