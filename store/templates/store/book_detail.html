@@ -1,0 +1,67 @@
+{% extends 'store/base.html' %}
+{% block title %}Book Detail{% endblock %}
+{% block content %}
+<div class="box">
+    <h2 class="subtitle">{{ object.title }}</h2>
+    <p><strong>ISBN:</strong> {{ object.isbn }}</p>
+    <p><strong>Publisher:</strong> <a href="{% url 'publisher-detail' object.publisher.pk %}">{{ object.publisher.name }}</a></p>
+    <p><strong>Price:</strong> {{ object.price }} {{ object.currency }}</p>
+    <p><strong>Format:</strong> {{ object.format }}</p>
+    <p><strong>Language:</strong> {{ object.language }}</p>
+    <p><strong>Publication Date:</strong> {{ object.publication_date }}</p>
+    <p><strong>Categories:</strong> {% for book_category in object.book_categories.all %}{{ book_category.category.name }}{% if not forloop.last %}, {% endif %}{% empty %}N/A{% endfor %}</p>
+    <p><strong>Authors:</strong> {% for book_author in object.book_authors.all %}{{ book_author.author }}{% if book_author.contribution %} ({{ book_author.contribution }}){% endif %}{% if not forloop.last %}, {% endif %}{% empty %}N/A{% endfor %}</p>
+</div>
+
+<h3 class="subtitle">Customers Who Purchased</h3>
+<table class="table is-fullwidth">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Total Quantity</th>
+            <th>Most Recent Purchase</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for customer in customers %}
+            <tr>
+                <td>{{ customer.first_name }} {{ customer.last_name }}</td>
+                <td>{{ customer.total_quantity }}</td>
+                <td>{{ customer.last_purchase }}</td>
+                <td><a class="button is-small" href="{% url 'customer-detail' customer.pk %}">View Profile</a></td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="4">No purchases found for this book.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h3 class="subtitle">Orders Containing This Book</h3>
+<table class="table is-fullwidth">
+    <thead>
+        <tr>
+            <th>Order</th>
+            <th>Customer</th>
+            <th>Quantity</th>
+            <th>Subtotal</th>
+            <th>Status</th>
+            <th>Placed</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for order in orders %}
+            <tr>
+                <td><a href="{% url 'invoice-update' order.pk %}">{{ order.order_number }}</a></td>
+                <td><a href="{% url 'customer-detail' order.customer.pk %}">{{ order.customer }}</a></td>
+                <td>{{ order.quantity }}</td>
+                <td>{{ order.subtotal }}</td>
+                <td>{{ order.status }}</td>
+                <td>{{ order.placed_at }}</td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="6">This book has not been included in any orders.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

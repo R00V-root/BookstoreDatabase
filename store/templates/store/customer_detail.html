@@ -1,0 +1,34 @@
+{% extends 'store/base.html' %}
+{% block title %}Customer Detail{% endblock %}
+{% block content %}
+<div class="box">
+    <h2 class="subtitle">{{ object.first_name }} {{ object.last_name }}</h2>
+    <p><strong>Email:</strong> {{ object.email }}</p>
+    <p><strong>Phone:</strong> {{ object.phone_number }}</p>
+    <p><strong>Loyalty Points:</strong> {{ object.loyalty_points }}</p>
+</div>
+
+<h3 class="subtitle">Orders</h3>
+<table class="table is-fullwidth">
+    <thead>
+        <tr>
+            <th>Order Number</th>
+            <th>Status</th>
+            <th>Total</th>
+            <th>Placed</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for order in orders %}
+            <tr>
+                <td><a href="{% url 'invoice-update' order.pk %}">{{ order.order_number }}</a></td>
+                <td>{{ order.status }}</td>
+                <td>{{ order.total_amount }}</td>
+                <td>{{ order.placed_at }}</td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="4">No orders for this customer.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

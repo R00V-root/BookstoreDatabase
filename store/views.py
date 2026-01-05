@@ -7,6 +7,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.auth.views import LoginView
 from django.db import transaction
+from django.db.models import DecimalField, F, Max, Q, Sum
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.utils import timezone
@@ -48,11 +49,70 @@ class CustomerCreateView(LoginRequiredMixin, PermissionRequiredMixin, generic.Cr
     success_url = reverse_lazy("customer-list")
 
 
+class CustomerDetailView(LoginRequiredMixin, PermissionRequiredMixin, generic.DetailView):
+    model = Customer
+    template_name = "store/customer_detail.html"
+    permission_required = "store.view_customer"
+
+    def get_context_data(self, **kwargs):  # type: ignore[override]
+        context = super().get_context_data(**kwargs)
+        context["orders"] = self.object.orders.order_by("-placed_at")
+        return context
+
+
 class BookListView(LoginRequiredMixin, PermissionRequiredMixin, generic.ListView):
     model = Book
     template_name = "store/book_list.html"
     permission_required = "store.view_book"
     paginate_by = 20
+
+
+class BookDetailView(LoginRequiredMixin, PermissionRequiredMixin, generic.DetailView):
+    model = Book
+    template_name = "store/book_detail.html"
+    permission_required = "store.view_book"
+
+    def get_queryset(self):  # type: ignore[override]
+        return (
+            super()
+            .get_queryset()
+            .select_related("publisher")
+            .prefetch_related("book_authors__author", "book_categories__category")
+        )
+
+    def get_context_data(self, **kwargs):  # type: ignore[override]
+        context = super().get_context_data(**kwargs)
+        book = self.object
+
+        customers = (
+            Customer.objects.filter(orders__lines__book=book)
+            .annotate(
+                total_quantity=Sum(
+                    "orders__lines__quantity", filter=Q(orders__lines__book=book)
+                ),
+                last_purchase=Max(
+                    "orders__placed_at", filter=Q(orders__lines__book=book)
+                ),
+            )
+            .order_by("last_name", "first_name")
+        )
+
+        orders = (
+            Order.objects.filter(lines__book=book)
+            .select_related("customer")
+            .annotate(
+                quantity=Sum("lines__quantity", filter=Q(lines__book=book)),
+                subtotal=Sum(
+                    F("lines__quantity") * F("lines__unit_price"),
+                    filter=Q(lines__book=book),
+                    output_field=DecimalField(max_digits=12, decimal_places=2),
+                ),
+            )
+            .order_by("-placed_at")
+        )
+
+        context.update({"customers": customers, "orders": orders})
+        return context
 
 
 class BookCreateView(LoginRequiredMixin, PermissionRequiredMixin, generic.CreateView):
