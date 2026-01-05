@@ -19,7 +19,7 @@
         {% for order in object_list %}
             <tr>
                 <td>{{ order.order_number }}</td>
-                <td>{{ order.customer }}</td>
+                <td><a href="{% url 'customer-detail' order.customer.pk %}">{{ order.customer }}</a></td>
                 <td>{{ order.status }}</td>
                 <td>{{ order.total_amount }}</td>
                 <td><a class="button is-small" href="{% url 'invoice-update' order.pk %}">Edit</a></td>
