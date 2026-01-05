@@ -8,7 +8,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.auth.views import LoginView
 from django.db import transaction
-from django.db.models import Avg, Count, F, Max, Prefetch, Q, Sum
+from django.db.models import Avg, Count, DecimalField, ExpressionWrapper, F, Max, Prefetch, Q, Sum
 from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
@@ -16,7 +16,7 @@ from django.utils import timezone
 from django.views import generic
 
 from store.forms import BookForm, CustomerForm, OrderForm, OrderLineFormSet
-from store.models import Book, Customer, Order, OrderLine, OrderStatus, Publisher
+from store.models import Author, Book, Category, Customer, Order, OrderLine, OrderStatus, Publisher
 
 
 class EmployeeLoginView(LoginView):
@@ -250,4 +250,47 @@ class InvoiceReportView(LoginRequiredMixin, PermissionRequiredMixin, generic.Tem
         context = super().get_context_data(**kwargs)
         one_week_ago = timezone.now() - timedelta(days=7)
         context["orders"] = Order.objects.filter(placed_at__gte=one_week_ago).order_by("-placed_at")
+        return context
+
+
+class SalesAnalyticsReportView(LoginRequiredMixin, PermissionRequiredMixin, generic.TemplateView):
+    template_name = "store/sales_report.html"
+    permission_required = "store.view_order"
+
+    def get_context_data(self, **kwargs):  # type: ignore[override]
+        context = super().get_context_data(**kwargs)
+        line_revenue = ExpressionWrapper(
+            F("category_books__book__order_lines__quantity")
+            * F("category_books__book__order_lines__unit_price"),
+            output_field=DecimalField(max_digits=12, decimal_places=2),
+        )
+        category_revenue = (
+            Category.objects.annotate(revenue=Coalesce(Sum(line_revenue), Decimal("0.00")))
+            .order_by("-revenue", "name")
+            .all()
+        )
+        author_line_revenue = ExpressionWrapper(
+            F("author_books__book__order_lines__quantity")
+            * F("author_books__book__order_lines__unit_price"),
+            output_field=DecimalField(max_digits=12, decimal_places=2),
+        )
+        author_revenue = (
+            Author.objects.annotate(revenue=Coalesce(Sum(author_line_revenue), Decimal("0.00")))
+            .order_by("-revenue", "last_name", "first_name")
+            .all()
+        )
+        top_customers = (
+            Customer.objects.annotate(total_spend=Coalesce(Sum("orders__total_amount"), Decimal("0.00")))
+            .order_by("-total_spend", "last_name", "first_name")[:10]
+        )
+        context.update(
+            {
+                "category_revenue": category_revenue,
+                "author_revenue": author_revenue,
+                "top_customers": top_customers,
+                "category_max": max((entry.revenue for entry in category_revenue), default=Decimal("0.00")),
+                "author_max": max((entry.revenue for entry in author_revenue), default=Decimal("0.00")),
+                "customer_max": max((entry.total_spend for entry in top_customers), default=Decimal("0.00")),
+            }
+        )
         return context

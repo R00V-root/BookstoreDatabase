@@ -1,0 +1,100 @@
+{% extends 'store/base.html' %}
+{% block title %}Sales Analytics{% endblock %}
+{% block content %}
+<h2 class="subtitle">Sales Analytics</h2>
+
+<div class="columns is-multiline">
+    <div class="column is-12">
+        <h3 class="subtitle is-5">Revenue by Category</h3>
+        <table class="table is-fullwidth is-striped">
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Revenue</th>
+                    <th>Share</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in category_revenue %}
+                    <tr>
+                        <td>{{ entry.name }}</td>
+                        <td>{{ entry.revenue }}</td>
+                        <td>
+                            <progress
+                                class="progress is-info"
+                                value="{{ entry.revenue }}"
+                                max="{{ category_max|default_if_none:0 }}">
+                                {{ entry.revenue }}
+                            </progress>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="3">No category revenue data available.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="column is-12">
+        <h3 class="subtitle is-5">Revenue by Author</h3>
+        <table class="table is-fullwidth is-striped">
+            <thead>
+                <tr>
+                    <th>Author</th>
+                    <th>Revenue</th>
+                    <th>Share</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in author_revenue %}
+                    <tr>
+                        <td>{{ entry.first_name }} {{ entry.last_name }}</td>
+                        <td>{{ entry.revenue }}</td>
+                        <td>
+                            <progress
+                                class="progress is-primary"
+                                value="{{ entry.revenue }}"
+                                max="{{ author_max|default_if_none:0 }}">
+                                {{ entry.revenue }}
+                            </progress>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="3">No author revenue data available.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="column is-12">
+        <h3 class="subtitle is-5">Top Customers by Spend</h3>
+        <table class="table is-fullwidth is-striped">
+            <thead>
+                <tr>
+                    <th>Customer</th>
+                    <th>Total Spend</th>
+                    <th>Share</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for customer in top_customers %}
+                    <tr>
+                        <td>{{ customer.first_name }} {{ customer.last_name }}</td>
+                        <td>{{ customer.total_spend }}</td>
+                        <td>
+                            <progress
+                                class="progress is-success"
+                                value="{{ customer.total_spend }}"
+                                max="{{ customer_max|default_if_none:0 }}">
+                                {{ customer.total_spend }}
+                            </progress>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="3">No customer spend data available.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
