@@ -14,6 +14,7 @@ urlpatterns = [
     path("customers/<int:pk>/", views.CustomerDetailView.as_view(), name="customer-detail"),
     path("books/", views.BookListView.as_view(), name="book-list"),
     path("books/new/", views.BookCreateView.as_view(), name="book-create"),
+    path("books/<int:pk>/", views.BookDetailView.as_view(), name="book-detail"),
     path("publishers/", views.PublisherListView.as_view(), name="publisher-list"),
     path("publishers/<int:pk>/", views.PublisherDetailView.as_view(), name="publisher-detail"),
     path("orders/", views.InvoiceListView.as_view(), name="invoice-list"),

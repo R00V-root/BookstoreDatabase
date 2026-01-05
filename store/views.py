@@ -8,7 +8,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.auth.views import LoginView
 from django.db import transaction
-from django.db.models import Avg, Count, Max, Prefetch, Sum
+from django.db.models import Avg, Count, F, Max, Prefetch, Q, Sum
 from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
@@ -16,7 +16,7 @@ from django.utils import timezone
 from django.views import generic
 
 from store.forms import BookForm, CustomerForm, OrderForm, OrderLineFormSet
-from store.models import Book, Customer, Order, OrderStatus, Publisher
+from store.models import Book, Customer, Order, OrderLine, OrderStatus, Publisher
 
 
 class EmployeeLoginView(LoginView):
@@ -102,6 +102,37 @@ class BookListView(LoginRequiredMixin, PermissionRequiredMixin, generic.ListView
     template_name = "store/book_list.html"
     permission_required = "store.view_book"
     paginate_by = 20
+
+
+class BookDetailView(LoginRequiredMixin, PermissionRequiredMixin, generic.DetailView):
+    model = Book
+    template_name = "store/book_detail.html"
+    permission_required = "store.view_book"
+
+    def get_queryset(self):  # type: ignore[override]
+        return Book.objects.select_related("publisher").prefetch_related(
+            Prefetch(
+                "order_lines",
+                queryset=OrderLine.objects.select_related("order", "order__customer").annotate(
+                    line_subtotal=F("quantity") * F("unit_price")
+                ).order_by("-order__placed_at"),
+            )
+        )
+
+    def get_context_data(self, **kwargs):  # type: ignore[override]
+        context = super().get_context_data(**kwargs)
+        book = self.object
+        book_filter = Q(orders__lines__book=book)
+        context["customer_report"] = (
+            Customer.objects.filter(book_filter)
+            .annotate(
+                total_quantity=Coalesce(Sum("orders__lines__quantity", filter=book_filter), 0),
+                last_purchase=Max("orders__lines__order__placed_at", filter=book_filter),
+            )
+            .order_by("last_name", "first_name")
+        )
+        context["order_lines"] = book.order_lines.all()
+        return context
 
 
 class BookCreateView(LoginRequiredMixin, PermissionRequiredMixin, generic.CreateView):

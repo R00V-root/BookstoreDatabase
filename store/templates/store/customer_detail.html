@@ -84,7 +84,7 @@
                                 <tbody>
                                     {% for line in order.lines.all %}
                                         <tr>
-                                            <td><a href="{% url 'book-list' %}?book={{ line.book.pk }}">{{ line.book.title }}</a></td>
+                                            <td><a href="{% url 'book-detail' line.book.pk %}">{{ line.book.title }}</a></td>
                                             <td class="has-text-right">{{ line.quantity }}</td>
                                             <td class="has-text-right">${{ line.unit_price|floatformat:2 }}</td>
                                             <td class="has-text-right">${{ line.subtotal|floatformat:2 }}</td>
