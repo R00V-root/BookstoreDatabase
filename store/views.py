@@ -16,7 +16,7 @@ from django.utils import timezone
 from django.views import generic
 
 from store.forms import BookForm, CustomerForm, OrderForm, OrderLineFormSet
-from store.models import Author, Book, Category, Customer, Order, OrderLine, OrderStatus, Publisher
+from store.models import Book, Customer, Order, OrderLine, OrderStatus, Publisher
 
 
 class EmployeeLoginView(LoginView):
@@ -250,47 +250,49 @@ class InvoiceReportView(LoginRequiredMixin, PermissionRequiredMixin, generic.Tem
         context = super().get_context_data(**kwargs)
         one_week_ago = timezone.now() - timedelta(days=7)
         context["orders"] = Order.objects.filter(placed_at__gte=one_week_ago).order_by("-placed_at")
-        return context
-
-
-class SalesAnalyticsReportView(LoginRequiredMixin, PermissionRequiredMixin, generic.TemplateView):
-    template_name = "store/sales_report.html"
-    permission_required = "store.view_order"
-
-    def get_context_data(self, **kwargs):  # type: ignore[override]
-        context = super().get_context_data(**kwargs)
-        line_revenue = ExpressionWrapper(
-            F("category_books__book__order_lines__quantity")
-            * F("category_books__book__order_lines__unit_price"),
-            output_field=DecimalField(max_digits=12, decimal_places=2),
-        )
-        category_revenue = (
-            Category.objects.annotate(revenue=Coalesce(Sum(line_revenue), Decimal("0.00")))
-            .order_by("-revenue", "name")
-            .all()
-        )
-        author_line_revenue = ExpressionWrapper(
-            F("author_books__book__order_lines__quantity")
-            * F("author_books__book__order_lines__unit_price"),
-            output_field=DecimalField(max_digits=12, decimal_places=2),
-        )
-        author_revenue = (
-            Author.objects.annotate(revenue=Coalesce(Sum(author_line_revenue), Decimal("0.00")))
-            .order_by("-revenue", "last_name", "first_name")
-            .all()
-        )
-        top_customers = (
+        customer_totals = (
             Customer.objects.annotate(total_spend=Coalesce(Sum("orders__total_amount"), Decimal("0.00")))
             .order_by("-total_spend", "last_name", "first_name")[:10]
         )
+        total_customer_spend = sum((customer.total_spend for customer in customer_totals), Decimal("0.00"))
+        customer_spend = [
+            {
+                "customer": customer,
+                "total_spend": customer.total_spend,
+                "share_percent": (
+                    (customer.total_spend / total_customer_spend) * Decimal("100.0")
+                    if total_customer_spend
+                    else Decimal("0.0")
+                ),
+            }
+            for customer in customer_totals
+        ]
+        vendor_line_revenue = ExpressionWrapper(
+            F("books__order_lines__quantity") * F("books__order_lines__unit_price"),
+            output_field=DecimalField(max_digits=12, decimal_places=2),
+        )
+        vendor_totals = (
+            Publisher.objects.annotate(revenue=Coalesce(Sum(vendor_line_revenue), Decimal("0.00")))
+            .order_by("-revenue", "name")
+            .all()
+        )
+        total_vendor_spend = sum((vendor.revenue for vendor in vendor_totals), Decimal("0.00"))
+        vendor_revenue = [
+            {
+                "vendor": vendor,
+                "revenue": vendor.revenue,
+                "share_percent": (
+                    (vendor.revenue / total_vendor_spend) * Decimal("100.0")
+                    if total_vendor_spend
+                    else Decimal("0.0")
+                ),
+            }
+            for vendor in vendor_totals
+        ]
         context.update(
             {
-                "category_revenue": category_revenue,
-                "author_revenue": author_revenue,
-                "top_customers": top_customers,
-                "category_max": max((entry.revenue for entry in category_revenue), default=Decimal("0.00")),
-                "author_max": max((entry.revenue for entry in author_revenue), default=Decimal("0.00")),
-                "customer_max": max((entry.total_spend for entry in top_customers), default=Decimal("0.00")),
+                "top_customers": customer_spend,
+                "vendor_revenue": vendor_revenue,
             }
         )
         return context

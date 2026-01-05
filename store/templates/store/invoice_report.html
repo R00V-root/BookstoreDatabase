@@ -26,4 +26,60 @@
         {% endfor %}
     </tbody>
 </table>
+
+<div class="content">
+    <h2 class="subtitle">Top Customers by Spend</h2>
+    <table class="table is-fullwidth is-striped">
+        <thead>
+            <tr>
+                <th>Customer</th>
+                <th>Total Spend</th>
+                <th>Share</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in top_customers %}
+                <tr>
+                    <td>{{ entry.customer.first_name }} {{ entry.customer.last_name }}</td>
+                    <td>{{ entry.total_spend }}</td>
+                    <td>
+                        <progress class="progress is-success" value="{{ entry.share_percent }}" max="100">
+                            {{ entry.share_percent|floatformat:2 }}%
+                        </progress>
+                        {{ entry.share_percent|floatformat:2 }}%
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="3">No customer spend data available.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2 class="subtitle">Revenue by Vendor</h2>
+    <table class="table is-fullwidth is-striped">
+        <thead>
+            <tr>
+                <th>Vendor</th>
+                <th>Revenue</th>
+                <th>Share</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in vendor_revenue %}
+                <tr>
+                    <td>{{ entry.vendor.name }}</td>
+                    <td>{{ entry.revenue }}</td>
+                    <td>
+                        <progress class="progress is-info" value="{{ entry.share_percent }}" max="100">
+                            {{ entry.share_percent|floatformat:2 }}%
+                        </progress>
+                        {{ entry.share_percent|floatformat:2 }}%
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="3">No vendor revenue data available.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 {% endblock %}
