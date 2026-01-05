@@ -330,6 +330,9 @@ class Shipment(TimestampedModel):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="shipments")
     carrier = models.CharField(max_length=64)
     tracking_number = models.CharField(max_length=128, unique=True)
+    warehouse = models.ForeignKey(
+        "Warehouse", on_delete=models.SET_NULL, null=True, blank=True, related_name="shipments"
+    )
     shipped_at = models.DateTimeField(null=True, blank=True)
     delivered_at = models.DateTimeField(null=True, blank=True)
 

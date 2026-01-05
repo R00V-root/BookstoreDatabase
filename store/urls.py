@@ -19,4 +19,6 @@ urlpatterns = [
     path("orders/new/", views.InvoiceCreateView.as_view(), name="invoice-create"),
     path("orders/<int:pk>/", views.InvoiceUpdateView.as_view(), name="invoice-update"),
     path("reports/invoices/", views.InvoiceReportView.as_view(), name="invoice-report"),
+    path("reports/warehouses/", views.WarehouseListView.as_view(), name="warehouse-report"),
+    path("reports/warehouses/<int:pk>/", views.WarehouseDetailView.as_view(), name="warehouse-detail"),
 ]

@@ -1,0 +1,96 @@
+{% extends "store/base.html" %}
+
+{% block title %}Warehouse {{ warehouse.code }}{% endblock %}
+
+{% block content %}
+<div class="level">
+    <div class="level-left">
+        <div>
+            <p class="title">{{ warehouse.name }} ({{ warehouse.code }})</p>
+            <p class="subtitle">{{ warehouse.address.line1 }}, {{ warehouse.address.city }}{% if warehouse.address.state %}, {{ warehouse.address.state }}{% endif %}</p>
+            <p class="has-text-grey">Inventory lines: {{ inventory|length }} | Orders fulfilled: {{ orders|length }}</p>
+        </div>
+    </div>
+    <div class="level-right">
+        <a class="button" href="{% url 'warehouse-report' %}">Back to overview</a>
+    </div>
+</div>
+
+<div class="box">
+    <div class="level">
+        <div class="level-left">
+            <p class="title is-5">Current stock</p>
+        </div>
+        <div class="level-right buttons has-addons">
+            <a class="button {% if request.GET.sort == 'title' or not request.GET.sort %}is-link is-light{% endif %}" href="?sort=title">Title A-Z</a>
+            <a class="button {% if request.GET.sort == 'title_desc' %}is-link is-light{% endif %}" href="?sort=title_desc">Title Z-A</a>
+            <a class="button {% if request.GET.sort == 'qty_desc' %}is-link is-light{% endif %}" href="?sort=qty_desc">Qty High</a>
+            <a class="button {% if request.GET.sort == 'qty' %}is-link is-light{% endif %}" href="?sort=qty">Qty Low</a>
+        </div>
+    </div>
+    <div class="table-container">
+        <table class="table is-fullwidth is-hoverable is-striped">
+            <thead>
+                <tr>
+                    <th>Book</th>
+                    <th class="has-text-centered">On Hand</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for stock in inventory %}
+                <tr class="{% if stock.quantity <= low_stock_threshold %}has-background-warning-light{% endif %}">
+                    <td>{{ stock.book.title }}</td>
+                    <td class="has-text-centered">{{ stock.quantity }}</td>
+                    <td>
+                        {% if stock.quantity <= low_stock_threshold %}
+                            <span class="tag is-warning">Low</span>
+                        {% else %}
+                            <span class="tag is-success">Healthy</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" class="has-text-centered has-text-grey">No inventory recorded.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="box">
+    <p class="title is-5">Orders fulfilled from this warehouse</p>
+    <div class="table-container">
+        <table class="table is-fullwidth is-hoverable is-striped">
+            <thead>
+                <tr>
+                    <th>Order</th>
+                    <th>Customer</th>
+                    <th>Tracking</th>
+                    <th>Shipped</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                {% for shipment in order.shipments.all %}
+                {% if shipment.warehouse_id == warehouse.id %}
+                <tr>
+                    <td><a href="{% url 'invoice-update' order.pk %}">{{ order.order_number }}</a></td>
+                    <td>{{ order.customer.first_name }} {{ order.customer.last_name }}</td>
+                    <td>{{ shipment.tracking_number }}</td>
+                    <td>{{ shipment.shipped_at|date:"Y-m-d"|default:"Pending" }}</td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="has-text-centered has-text-grey">No shipments recorded for this warehouse.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

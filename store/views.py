@@ -7,13 +7,14 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.auth.views import LoginView
 from django.db import transaction
+from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views import generic
 
 from store.forms import BookForm, CustomerForm, OrderForm, OrderLineFormSet
-from store.models import Book, Customer, Order, OrderStatus, Publisher
+from store.models import Book, Customer, Inventory, Order, OrderStatus, Publisher, Shipment, Warehouse
 
 
 class EmployeeLoginView(LoginView):
@@ -166,4 +167,90 @@ class InvoiceReportView(LoginRequiredMixin, PermissionRequiredMixin, generic.Tem
         context = super().get_context_data(**kwargs)
         one_week_ago = timezone.now() - timedelta(days=7)
         context["orders"] = Order.objects.filter(placed_at__gte=one_week_ago).order_by("-placed_at")
+        return context
+
+
+class WarehouseListView(LoginRequiredMixin, PermissionRequiredMixin, generic.TemplateView):
+    template_name = "store/warehouse_list.html"
+    permission_required = "store.view_warehouse"
+    low_stock_threshold = 5
+
+    def get_context_data(self, **kwargs):  # type: ignore[override]
+        context = super().get_context_data(**kwargs)
+        warehouses = (
+            Warehouse.objects.select_related("address")
+            .prefetch_related(
+                Prefetch(
+                    "inventory",
+                    queryset=Inventory.objects.select_related("book").order_by("book__title"),
+                ),
+                "shipments__order",
+            )
+            .all()
+        )
+
+        fulfillments = (
+            Shipment.objects.select_related("order", "warehouse")
+            .filter(warehouse__isnull=False)
+            .order_by("-shipped_at", "-created_at")
+        )
+
+        orders_by_warehouse: dict[int, set[int]] = {}
+        for shipment in fulfillments:
+            warehouse_id = shipment.warehouse_id
+            if warehouse_id is None:
+                continue
+            orders_by_warehouse.setdefault(warehouse_id, set()).add(shipment.order_id)
+
+        for warehouse in warehouses:
+            warehouse.fulfilled_orders_count = len(orders_by_warehouse.get(warehouse.id, set()))
+
+        context.update(
+            {
+                "warehouses": warehouses,
+                "low_stock_threshold": self.low_stock_threshold,
+                "fulfillments": fulfillments,
+            }
+        )
+        return context
+
+
+class WarehouseDetailView(LoginRequiredMixin, PermissionRequiredMixin, generic.DetailView):
+    model = Warehouse
+    template_name = "store/warehouse_detail.html"
+    permission_required = "store.view_warehouse"
+    context_object_name = "warehouse"
+    low_stock_threshold = 5
+
+    def get_ordering(self) -> str:
+        sort = self.request.GET.get("sort") or "title"
+        sort_mapping = {
+            "title": "book__title",
+            "title_desc": "-book__title",
+            "qty": "quantity",
+            "qty_desc": "-quantity",
+        }
+        return sort_mapping.get(sort, "book__title")
+
+    def get_context_data(self, **kwargs):  # type: ignore[override]
+        context = super().get_context_data(**kwargs)
+        inventory = (
+            self.object.inventory.select_related("book")
+            .order_by(self.get_ordering())
+            .all()
+        )
+        orders = (
+            Order.objects.filter(shipments__warehouse=self.object)
+            .select_related("customer")
+            .prefetch_related("shipments")
+            .order_by("-placed_at")
+            .distinct()
+        )
+        context.update(
+            {
+                "inventory": inventory,
+                "orders": orders,
+                "low_stock_threshold": self.low_stock_threshold,
+            }
+        )
         return context
