@@ -112,7 +112,7 @@ class BookDetailView(LoginRequiredMixin, PermissionRequiredMixin, generic.Detail
             Prefetch(
                 "order_lines",
                 queryset=OrderLine.objects.select_related("order", "order__customer").annotate(
-                    line_subtotal=F("quantity") * F("unit_price")
+                    line_subtotal=F("quantity") * F("book__price")
                 ).order_by("-order__placed_at"),
             )
         )
@@ -204,6 +204,9 @@ class InvoiceCreateView(LoginRequiredMixin, PermissionRequiredMixin, generic.Cre
                 return self.form_invalid(form)
             response = super().form_valid(form)
             lines.instance = self.object
+            for line_form in lines.forms:
+                if line_form.instance.book_id:
+                    line_form.instance.unit_price = line_form.instance.book.price
             lines.save()
         messages.success(self.request, "Invoice created")
         return response
@@ -231,6 +234,9 @@ class InvoiceUpdateView(LoginRequiredMixin, PermissionRequiredMixin, generic.Upd
             if not lines.is_valid():
                 return self.form_invalid(form)
             response = super().form_valid(form)
+            for line_form in lines.forms:
+                if line_form.instance.book_id:
+                    line_form.instance.unit_price = line_form.instance.book.price
             lines.save()
         messages.success(self.request, "Invoice updated")
         return response

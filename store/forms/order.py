@@ -18,7 +18,7 @@ class OrderForm(forms.ModelForm):
 OrderLineFormSet = inlineformset_factory(
     Order,
     OrderLine,
-    fields=["book", "quantity", "unit_price"],
+    fields=["book", "quantity"],
     extra=1,
     can_delete=True,
 )
