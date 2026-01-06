@@ -16,7 +16,17 @@ from django.utils import timezone
 from django.views import generic
 
 from store.forms import BookForm, CustomerForm, OrderForm, OrderLineFormSet
-from store.models import Book, Customer, Order, OrderLine, OrderStatus, Publisher
+from store.models import (
+    Author,
+    Book,
+    Category,
+    Customer,
+    Inventory,
+    Order,
+    OrderLine,
+    OrderStatus,
+    Publisher,
+)
 
 
 class EmployeeLoginView(LoginView):
@@ -101,6 +111,45 @@ class BookListView(LoginRequiredMixin, PermissionRequiredMixin, generic.ListView
     template_name = "store/book_list.html"
     permission_required = "store.view_book"
 
+    def get_queryset(self):  # type: ignore[override]
+        queryset = Book.objects.select_related("publisher").prefetch_related(
+            "book_authors__author",
+            "book_categories__category",
+        )
+        publisher_id = self.request.GET.get("publisher")
+        author_id = self.request.GET.get("author")
+        category_id = self.request.GET.get("category")
+        availability = self.request.GET.get("availability")
+
+        if publisher_id:
+            queryset = queryset.filter(publisher_id=publisher_id)
+        if author_id:
+            queryset = queryset.filter(book_authors__author_id=author_id)
+        if category_id:
+            queryset = queryset.filter(book_categories__category_id=category_id)
+        if availability:
+            availability_filter = Q(inventory__quantity__gt=0)
+            if availability == "out_of_stock":
+                availability_filter = Q(inventory__quantity__lte=0)
+            queryset = queryset.filter(availability_filter)
+
+        return queryset.distinct()
+
+    def get_context_data(self, **kwargs):  # type: ignore[override]
+        context = super().get_context_data(**kwargs)
+        context.update(
+            {
+                "publishers": Publisher.objects.order_by("name"),
+                "authors": Author.objects.order_by("last_name", "first_name"),
+                "categories": Category.objects.order_by("name"),
+                "selected_publisher": self.request.GET.get("publisher", ""),
+                "selected_author": self.request.GET.get("author", ""),
+                "selected_category": self.request.GET.get("category", ""),
+                "selected_availability": self.request.GET.get("availability", ""),
+            }
+        )
+        return context
+
 
 class BookDetailView(LoginRequiredMixin, PermissionRequiredMixin, generic.DetailView):
     model = Book
@@ -109,6 +158,8 @@ class BookDetailView(LoginRequiredMixin, PermissionRequiredMixin, generic.Detail
 
     def get_queryset(self):  # type: ignore[override]
         return Book.objects.select_related("publisher").prefetch_related(
+            "book_authors__author",
+            "book_categories__category",
             Prefetch(
                 "order_lines",
                 queryset=OrderLine.objects.select_related("order", "order__customer").annotate(
@@ -146,6 +197,29 @@ class PublisherListView(LoginRequiredMixin, PermissionRequiredMixin, generic.Lis
     template_name = "store/publisher_list.html"
     permission_required = "store.view_publisher"
 
+    def get_queryset(self):  # type: ignore[override]
+        queryset = Publisher.objects.all()
+        category_id = self.request.GET.get("category")
+        author_id = self.request.GET.get("author")
+
+        if category_id:
+            queryset = queryset.filter(books__book_categories__category_id=category_id)
+        if author_id:
+            queryset = queryset.filter(books__book_authors__author_id=author_id)
+        return queryset.distinct()
+
+    def get_context_data(self, **kwargs):  # type: ignore[override]
+        context = super().get_context_data(**kwargs)
+        context.update(
+            {
+                "categories": Category.objects.order_by("name"),
+                "authors": Author.objects.order_by("last_name", "first_name"),
+                "selected_category": self.request.GET.get("category", ""),
+                "selected_author": self.request.GET.get("author", ""),
+            }
+        )
+        return context
+
 
 class PublisherDetailView(LoginRequiredMixin, PermissionRequiredMixin, generic.DetailView):
     model = Publisher
@@ -154,7 +228,10 @@ class PublisherDetailView(LoginRequiredMixin, PermissionRequiredMixin, generic.D
 
     def get_context_data(self, **kwargs):  # type: ignore[override]
         context = super().get_context_data(**kwargs)
-        context["books"] = self.object.books.all()
+        context["books"] = self.object.books.prefetch_related(
+            "book_authors__author",
+            "book_categories__category",
+        )
         context.setdefault("book_form", BookForm(initial={"publisher": self.object}))
         return context
 
@@ -296,3 +373,156 @@ class InvoiceReportView(LoginRequiredMixin, PermissionRequiredMixin, generic.Tem
             }
         )
         return context
+
+
+class AuthorListView(LoginRequiredMixin, PermissionRequiredMixin, generic.ListView):
+    model = Author
+    template_name = "store/author_list.html"
+    permission_required = "store.view_author"
+
+    def get_queryset(self):  # type: ignore[override]
+        queryset = Author.objects.annotate(book_count=Count("author_books", distinct=True))
+        publisher_id = self.request.GET.get("publisher")
+        category_id = self.request.GET.get("category")
+
+        if publisher_id:
+            queryset = queryset.filter(author_books__book__publisher_id=publisher_id)
+        if category_id:
+            queryset = queryset.filter(author_books__book__book_categories__category_id=category_id)
+        return queryset.distinct()
+
+    def get_context_data(self, **kwargs):  # type: ignore[override]
+        context = super().get_context_data(**kwargs)
+        context.update(
+            {
+                "publishers": Publisher.objects.order_by("name"),
+                "categories": Category.objects.order_by("name"),
+                "selected_publisher": self.request.GET.get("publisher", ""),
+                "selected_category": self.request.GET.get("category", ""),
+            }
+        )
+        return context
+
+
+class AuthorDetailView(LoginRequiredMixin, PermissionRequiredMixin, generic.DetailView):
+    model = Author
+    template_name = "store/author_detail.html"
+    permission_required = "store.view_author"
+
+    def get_context_data(self, **kwargs):  # type: ignore[override]
+        context = super().get_context_data(**kwargs)
+        book_qs = (
+            Book.objects.filter(book_authors__author=self.object)
+            .select_related("publisher")
+            .prefetch_related("book_categories__category")
+        )
+        context["books"] = book_qs
+        context["categories"] = Category.objects.filter(
+            category_books__book__book_authors__author=self.object
+        ).distinct()
+        return context
+
+
+class CategoryListView(LoginRequiredMixin, PermissionRequiredMixin, generic.ListView):
+    model = Category
+    template_name = "store/category_list.html"
+    permission_required = "store.view_category"
+
+    def get_queryset(self):  # type: ignore[override]
+        queryset = Category.objects.annotate(book_count=Count("category_books", distinct=True))
+        publisher_id = self.request.GET.get("publisher")
+        author_id = self.request.GET.get("author")
+
+        if publisher_id:
+            queryset = queryset.filter(category_books__book__publisher_id=publisher_id)
+        if author_id:
+            queryset = queryset.filter(category_books__book__book_authors__author_id=author_id)
+        return queryset.distinct()
+
+    def get_context_data(self, **kwargs):  # type: ignore[override]
+        context = super().get_context_data(**kwargs)
+        context.update(
+            {
+                "publishers": Publisher.objects.order_by("name"),
+                "authors": Author.objects.order_by("last_name", "first_name"),
+                "selected_publisher": self.request.GET.get("publisher", ""),
+                "selected_author": self.request.GET.get("author", ""),
+            }
+        )
+        return context
+
+
+class CategoryDetailView(LoginRequiredMixin, PermissionRequiredMixin, generic.DetailView):
+    model = Category
+    template_name = "store/category_detail.html"
+    permission_required = "store.view_category"
+
+    def get_context_data(self, **kwargs):  # type: ignore[override]
+        context = super().get_context_data(**kwargs)
+        books = (
+            Book.objects.filter(book_categories__category=self.object)
+            .select_related("publisher")
+            .prefetch_related("book_authors__author")
+        )
+        context["books"] = books
+        context["authors"] = Author.objects.filter(
+            author_books__book__book_categories__category=self.object
+        ).distinct()
+        return context
+
+
+class InventoryListView(LoginRequiredMixin, PermissionRequiredMixin, generic.ListView):
+    model = Inventory
+    template_name = "store/inventory_list.html"
+    permission_required = "store.view_inventory"
+
+    def get_queryset(self):  # type: ignore[override]
+        queryset = Inventory.objects.select_related("warehouse", "book", "book__publisher").prefetch_related(
+            "book__book_authors__author",
+            "book__book_categories__category",
+        )
+        publisher_id = self.request.GET.get("publisher")
+        author_id = self.request.GET.get("author")
+        category_id = self.request.GET.get("category")
+        availability = self.request.GET.get("availability")
+
+        if publisher_id:
+            queryset = queryset.filter(book__publisher_id=publisher_id)
+        if author_id:
+            queryset = queryset.filter(book__book_authors__author_id=author_id)
+        if category_id:
+            queryset = queryset.filter(book__book_categories__category_id=category_id)
+        if availability:
+            availability_filter = Q(quantity__gt=0)
+            if availability == "out_of_stock":
+                availability_filter = Q(quantity__lte=0)
+            queryset = queryset.filter(availability_filter)
+
+        return queryset.distinct()
+
+    def get_context_data(self, **kwargs):  # type: ignore[override]
+        context = super().get_context_data(**kwargs)
+        context.update(
+            {
+                "publishers": Publisher.objects.order_by("name"),
+                "authors": Author.objects.order_by("last_name", "first_name"),
+                "categories": Category.objects.order_by("name"),
+                "selected_publisher": self.request.GET.get("publisher", ""),
+                "selected_author": self.request.GET.get("author", ""),
+                "selected_category": self.request.GET.get("category", ""),
+                "selected_availability": self.request.GET.get("availability", ""),
+            }
+        )
+        return context
+
+
+class InventoryDetailView(LoginRequiredMixin, PermissionRequiredMixin, generic.DetailView):
+    model = Inventory
+    template_name = "store/inventory_detail.html"
+    permission_required = "store.view_inventory"
+
+    def get_queryset(self):  # type: ignore[override]
+        return Inventory.objects.select_related("warehouse", "book", "book__publisher").prefetch_related(
+            "book__book_authors__author",
+            "book__book_categories__category",
+        )
