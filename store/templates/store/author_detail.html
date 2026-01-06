@@ -39,7 +39,7 @@
             {% if categories %}
                 <ul>
                     {% for category in categories %}
-                        <li><a href="{% url 'category-detail' category.pk %}">{{ category.name }}</a></li>
+                        <li>{{ category.name }}</li>
                     {% endfor %}
                 </ul>
             {% else %}

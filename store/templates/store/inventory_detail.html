@@ -49,11 +49,7 @@
             {% if object.book.book_categories.all %}
                 <ul>
                     {% for book_category in object.book.book_categories.all %}
-                        <li>
-                            <a href="{% url 'category-detail' book_category.category.pk %}">
-                                {{ book_category.category.name }}
-                            </a>
-                        </li>
+                        <li>{{ book_category.category.name }}</li>
                     {% endfor %}
                 </ul>
             {% else %}

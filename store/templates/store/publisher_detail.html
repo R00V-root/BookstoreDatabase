@@ -39,9 +39,7 @@
                 </td>
                 <td>
                     {% for book_category in book.book_categories.all %}
-                        <a href="{% url 'category-detail' book_category.category.pk %}">
-                            {{ book_category.category.name }}
-                        </a>{% if not forloop.last %}, {% endif %}
+                        {{ book_category.category.name }}{% if not forloop.last %}, {% endif %}
                     {% empty %}
                         <span class="has-text-grey">No categories</span>
                     {% endfor %}
