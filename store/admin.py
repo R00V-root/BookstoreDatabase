@@ -18,7 +18,6 @@ from store.models import (
     OrderAddress,
     OrderLine,
     Publisher,
-    Review,
     Warehouse,
 )
 
@@ -50,6 +49,5 @@ admin.site.register([
     Cart,
     CartItem,
     OrderAddress,
-    Review,
     AuditLog,
 ])

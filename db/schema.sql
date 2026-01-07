@@ -168,18 +168,6 @@ CREATE TABLE IF NOT EXISTS order_lines (
     UNIQUE(order_id, book_id)
 );
 
-CREATE TABLE IF NOT EXISTS reviews (
-    id BIGSERIAL PRIMARY KEY,
-    customer_id BIGINT NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
-    book_id BIGINT NOT NULL REFERENCES books(id) ON DELETE CASCADE,
-    rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
-    comment TEXT,
-    is_public BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(customer_id, book_id)
-);
-
 CREATE TABLE IF NOT EXISTS audit_logs (
     id BIGSERIAL PRIMARY KEY,
     action TEXT NOT NULL,

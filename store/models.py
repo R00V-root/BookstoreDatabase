@@ -312,19 +312,6 @@ class OrderLine(TimestampedModel):
         return self.quantity * self.unit_price
 
 
-class Review(TimestampedModel):
-    id = models.BigAutoField(primary_key=True)
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="reviews")
-    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name="reviews")
-    rating = models.PositiveIntegerField()
-    comment = models.TextField(blank=True)
-    is_public = models.BooleanField(default=True)
-
-    class Meta:
-        db_table = "reviews"
-        unique_together = ("customer", "book")
-
-
 class AuditLog(TimestampedModel):
     ACTIONS = (
         ("checkout", "Checkout"),
