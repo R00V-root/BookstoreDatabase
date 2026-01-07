@@ -312,18 +312,6 @@ class OrderLine(TimestampedModel):
         return self.quantity * self.unit_price
 
 
-class Shipment(TimestampedModel):
-    id = models.BigAutoField(primary_key=True)
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="shipments")
-    carrier = models.CharField(max_length=64)
-    tracking_number = models.CharField(max_length=128, unique=True)
-    shipped_at = models.DateTimeField(null=True, blank=True)
-    delivered_at = models.DateTimeField(null=True, blank=True)
-
-    class Meta:
-        db_table = "shipments"
-
-
 class Review(TimestampedModel):
     id = models.BigAutoField(primary_key=True)
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="reviews")

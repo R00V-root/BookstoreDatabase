@@ -168,17 +168,6 @@ CREATE TABLE IF NOT EXISTS order_lines (
     UNIQUE(order_id, book_id)
 );
 
-CREATE TABLE IF NOT EXISTS shipments (
-    id BIGSERIAL PRIMARY KEY,
-    order_id BIGINT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
-    carrier TEXT NOT NULL,
-    tracking_number TEXT NOT NULL UNIQUE,
-    shipped_at TIMESTAMPTZ,
-    delivered_at TIMESTAMPTZ,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-);
-
 CREATE TABLE IF NOT EXISTS reviews (
     id BIGSERIAL PRIMARY KEY,
     customer_id BIGINT NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
