@@ -3,20 +3,15 @@ from __future__ import annotations
 from django.contrib import admin
 
 from store.models import (
-    Address,
     Author,
     Book,
     BookAuthor,
     BookCategory,
-    Cart,
-    CartItem,
     Category,
     Customer,
-    Inventory,
     Order,
     OrderLine,
     Publisher,
-    Warehouse,
 )
 
 
@@ -41,9 +36,4 @@ admin.site.register([
     BookAuthor,
     BookCategory,
     Customer,
-    Address,
-    Warehouse,
-    Inventory,
-    Cart,
-    CartItem,
 ])

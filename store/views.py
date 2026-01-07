@@ -21,7 +21,6 @@ from store.models import (
     Book,
     Category,
     Customer,
-    Inventory,
     Order,
     OrderLine,
     OrderStatus,
@@ -119,19 +118,12 @@ class BookListView(LoginRequiredMixin, PermissionRequiredMixin, generic.ListView
         publisher_id = self.request.GET.get("publisher")
         author_id = self.request.GET.get("author")
         category_id = self.request.GET.get("category")
-        availability = self.request.GET.get("availability")
-
         if publisher_id:
             queryset = queryset.filter(publisher_id=publisher_id)
         if author_id:
             queryset = queryset.filter(book_authors__author_id=author_id)
         if category_id:
             queryset = queryset.filter(book_categories__category_id=category_id)
-        if availability:
-            availability_filter = Q(inventory__quantity__gt=0)
-            if availability == "out_of_stock":
-                availability_filter = Q(inventory__quantity__lte=0)
-            queryset = queryset.filter(availability_filter)
 
         return queryset.distinct()
 
@@ -145,7 +137,6 @@ class BookListView(LoginRequiredMixin, PermissionRequiredMixin, generic.ListView
                 "selected_publisher": self.request.GET.get("publisher", ""),
                 "selected_author": self.request.GET.get("author", ""),
                 "selected_category": self.request.GET.get("category", ""),
-                "selected_availability": self.request.GET.get("availability", ""),
             }
         )
         return context
@@ -422,107 +413,3 @@ class AuthorDetailView(LoginRequiredMixin, PermissionRequiredMixin, generic.Deta
         ).distinct()
         return context
 
-
-class CategoryListView(LoginRequiredMixin, PermissionRequiredMixin, generic.ListView):
-    model = Category
-    template_name = "store/category_list.html"
-    permission_required = "store.view_category"
-
-    def get_queryset(self):  # type: ignore[override]
-        queryset = Category.objects.annotate(book_count=Count("category_books", distinct=True))
-        publisher_id = self.request.GET.get("publisher")
-        author_id = self.request.GET.get("author")
-
-        if publisher_id:
-            queryset = queryset.filter(category_books__book__publisher_id=publisher_id)
-        if author_id:
-            queryset = queryset.filter(category_books__book__book_authors__author_id=author_id)
-        return queryset.distinct()
-
-    def get_context_data(self, **kwargs):  # type: ignore[override]
-        context = super().get_context_data(**kwargs)
-        context.update(
-            {
-                "publishers": Publisher.objects.order_by("name"),
-                "authors": Author.objects.order_by("last_name", "first_name"),
-                "selected_publisher": self.request.GET.get("publisher", ""),
-                "selected_author": self.request.GET.get("author", ""),
-            }
-        )
-        return context
-
-
-class CategoryDetailView(LoginRequiredMixin, PermissionRequiredMixin, generic.DetailView):
-    model = Category
-    template_name = "store/category_detail.html"
-    permission_required = "store.view_category"
-
-    def get_context_data(self, **kwargs):  # type: ignore[override]
-        context = super().get_context_data(**kwargs)
-        books = (
-            Book.objects.filter(book_categories__category=self.object)
-            .select_related("publisher")
-            .prefetch_related("book_authors__author")
-        )
-        context["books"] = books
-        context["authors"] = Author.objects.filter(
-            author_books__book__book_categories__category=self.object
-        ).distinct()
-        return context
-
-
-class InventoryListView(LoginRequiredMixin, PermissionRequiredMixin, generic.ListView):
-    model = Inventory
-    template_name = "store/inventory_list.html"
-    permission_required = "store.view_inventory"
-
-    def get_queryset(self):  # type: ignore[override]
-        queryset = Inventory.objects.select_related("warehouse", "book", "book__publisher").prefetch_related(
-            "book__book_authors__author",
-            "book__book_categories__category",
-        )
-        publisher_id = self.request.GET.get("publisher")
-        author_id = self.request.GET.get("author")
-        category_id = self.request.GET.get("category")
-        availability = self.request.GET.get("availability")
-
-        if publisher_id:
-            queryset = queryset.filter(book__publisher_id=publisher_id)
-        if author_id:
-            queryset = queryset.filter(book__book_authors__author_id=author_id)
-        if category_id:
-            queryset = queryset.filter(book__book_categories__category_id=category_id)
-        if availability:
-            availability_filter = Q(quantity__gt=0)
-            if availability == "out_of_stock":
-                availability_filter = Q(quantity__lte=0)
-            queryset = queryset.filter(availability_filter)
-
-        return queryset.distinct()
-
-    def get_context_data(self, **kwargs):  # type: ignore[override]
-        context = super().get_context_data(**kwargs)
-        context.update(
-            {
-                "publishers": Publisher.objects.order_by("name"),
-                "authors": Author.objects.order_by("last_name", "first_name"),
-                "categories": Category.objects.order_by("name"),
-                "selected_publisher": self.request.GET.get("publisher", ""),
-                "selected_author": self.request.GET.get("author", ""),
-                "selected_category": self.request.GET.get("category", ""),
-                "selected_availability": self.request.GET.get("availability", ""),
-            }
-        )
-        return context
-
-
-class InventoryDetailView(LoginRequiredMixin, PermissionRequiredMixin, generic.DetailView):
-    model = Inventory
-    template_name = "store/inventory_detail.html"
-    permission_required = "store.view_inventory"
-
-    def get_queryset(self):  # type: ignore[override]
-        return Inventory.objects.select_related("warehouse", "book", "book__publisher").prefetch_related(
-            "book__book_authors__author",
-            "book__book_categories__category",
-        )

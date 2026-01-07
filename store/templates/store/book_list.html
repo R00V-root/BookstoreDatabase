@@ -7,7 +7,7 @@
 </div>
 <form method="get" class="box">
     <div class="columns is-multiline">
-        <div class="column is-one-quarter">
+        <div class="column is-one-third">
             <label class="label" for="publisher">Publisher</label>
             <div class="select is-fullwidth">
                 <select id="publisher" name="publisher">
@@ -20,7 +20,7 @@
                 </select>
             </div>
         </div>
-        <div class="column is-one-quarter">
+        <div class="column is-one-third">
             <label class="label" for="author">Author</label>
             <div class="select is-fullwidth">
                 <select id="author" name="author">
@@ -33,7 +33,7 @@
                 </select>
             </div>
         </div>
-        <div class="column is-one-quarter">
+        <div class="column is-one-third">
             <label class="label" for="category">Category</label>
             <div class="select is-fullwidth">
                 <select id="category" name="category">
@@ -43,16 +43,6 @@
                             {{ category.name }}
                         </option>
                     {% endfor %}
-                </select>
-            </div>
-        </div>
-        <div class="column is-one-quarter">
-            <label class="label" for="availability">Availability</label>
-            <div class="select is-fullwidth">
-                <select id="availability" name="availability">
-                    <option value="">All inventory</option>
-                    <option value="in_stock" {% if selected_availability == "in_stock" %}selected{% endif %}>In stock</option>
-                    <option value="out_of_stock" {% if selected_availability == "out_of_stock" %}selected{% endif %}>Out of stock</option>
                 </select>
             </div>
         </div>
