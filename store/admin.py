@@ -15,7 +15,6 @@ from store.models import (
     Customer,
     Inventory,
     Order,
-    OrderAddress,
     OrderLine,
     Publisher,
     Warehouse,
@@ -48,6 +47,5 @@ admin.site.register([
     Inventory,
     Cart,
     CartItem,
-    OrderAddress,
     AuditLog,
 ])

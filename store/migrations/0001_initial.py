@@ -314,32 +314,6 @@ class Migration(migrations.Migration):
             options={"db_table": "cart_items", "unique_together": {("cart", "book")}},
         ),
         migrations.CreateModel(
-            name="OrderAddress",
-            fields=[
-                ("id", models.BigAutoField(primary_key=True, serialize=False)),
-                ("created_at", models.DateTimeField(default=django.utils.timezone.now, db_index=True)),
-                ("updated_at", models.DateTimeField(auto_now=True)),
-                ("address_type", models.CharField(choices=[("shipping", "Shipping"), ("billing", "Billing")], max_length=16)),
-                (
-                    "address",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.PROTECT,
-                        related_name="order_addresses",
-                        to="store.address",
-                    ),
-                ),
-                (
-                    "order",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE,
-                        related_name="addresses",
-                        to="store.order",
-                    ),
-                ),
-            ],
-            options={"db_table": "order_addresses", "unique_together": {("order", "address_type")}},
-        ),
-        migrations.CreateModel(
             name="OrderLine",
             fields=[
                 ("id", models.BigAutoField(primary_key=True, serialize=False)),

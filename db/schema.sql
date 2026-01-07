@@ -147,16 +147,6 @@ CREATE TABLE IF NOT EXISTS orders (
 );
 CREATE INDEX IF NOT EXISTS orders_customer_created_idx ON orders(customer_id, created_at);
 
-CREATE TABLE IF NOT EXISTS order_addresses (
-    id BIGSERIAL PRIMARY KEY,
-    order_id BIGINT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
-    address_id BIGINT NOT NULL REFERENCES addresses(id) ON DELETE RESTRICT,
-    address_type TEXT NOT NULL CHECK (address_type IN ('shipping','billing')),
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(order_id, address_type)
-);
-
 CREATE TABLE IF NOT EXISTS order_lines (
     id BIGSERIAL PRIMARY KEY,
     order_id BIGINT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
