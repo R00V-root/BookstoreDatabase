@@ -367,27 +367,6 @@ class Migration(migrations.Migration):
             options={"db_table": "order_lines", "unique_together": {("order", "book")}},
         ),
         migrations.CreateModel(
-            name="Shipment",
-            fields=[
-                ("id", models.BigAutoField(primary_key=True, serialize=False)),
-                ("created_at", models.DateTimeField(default=django.utils.timezone.now, db_index=True)),
-                ("updated_at", models.DateTimeField(auto_now=True)),
-                ("carrier", models.CharField(max_length=64)),
-                ("tracking_number", models.CharField(max_length=128, unique=True)),
-                ("shipped_at", models.DateTimeField(blank=True, null=True)),
-                ("delivered_at", models.DateTimeField(blank=True, null=True)),
-                (
-                    "order",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE,
-                        related_name="shipments",
-                        to="store.order",
-                    ),
-                ),
-            ],
-            options={"db_table": "shipments"},
-        ),
-        migrations.CreateModel(
             name="Review",
             fields=[
                 ("id", models.BigAutoField(primary_key=True, serialize=False)),
