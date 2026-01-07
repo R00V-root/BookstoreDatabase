@@ -168,18 +168,6 @@ CREATE TABLE IF NOT EXISTS order_lines (
     UNIQUE(order_id, book_id)
 );
 
-CREATE TABLE IF NOT EXISTS payments (
-    id BIGSERIAL PRIMARY KEY,
-    order_id BIGINT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
-    amount NUMERIC(12,2) NOT NULL CHECK (amount >= 0),
-    payment_method TEXT NOT NULL,
-    transaction_reference TEXT NOT NULL UNIQUE,
-    status TEXT DEFAULT 'captured',
-    processed_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-);
-
 CREATE TABLE IF NOT EXISTS shipments (
     id BIGSERIAL PRIMARY KEY,
     order_id BIGINT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
