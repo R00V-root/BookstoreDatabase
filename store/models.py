@@ -312,19 +312,6 @@ class OrderLine(TimestampedModel):
         return self.quantity * self.unit_price
 
 
-class Payment(TimestampedModel):
-    id = models.BigAutoField(primary_key=True)
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="payments")
-    amount = models.DecimalField(max_digits=12, decimal_places=2)
-    payment_method = models.CharField(max_length=64)
-    transaction_reference = models.CharField(max_length=128, unique=True)
-    status = models.CharField(max_length=32, default="captured")
-    processed_at = models.DateTimeField(default=timezone.now)
-
-    class Meta:
-        db_table = "payments"
-
-
 class Shipment(TimestampedModel):
     id = models.BigAutoField(primary_key=True)
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="shipments")

@@ -367,28 +367,6 @@ class Migration(migrations.Migration):
             options={"db_table": "order_lines", "unique_together": {("order", "book")}},
         ),
         migrations.CreateModel(
-            name="Payment",
-            fields=[
-                ("id", models.BigAutoField(primary_key=True, serialize=False)),
-                ("created_at", models.DateTimeField(default=django.utils.timezone.now, db_index=True)),
-                ("updated_at", models.DateTimeField(auto_now=True)),
-                ("amount", models.DecimalField(decimal_places=2, max_digits=12)),
-                ("payment_method", models.CharField(max_length=64)),
-                ("transaction_reference", models.CharField(max_length=128, unique=True)),
-                ("status", models.CharField(default="captured", max_length=32)),
-                ("processed_at", models.DateTimeField(default=django.utils.timezone.now)),
-                (
-                    "order",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE,
-                        related_name="payments",
-                        to="store.order",
-                    ),
-                ),
-            ],
-            options={"db_table": "payments"},
-        ),
-        migrations.CreateModel(
             name="Shipment",
             fields=[
                 ("id", models.BigAutoField(primary_key=True, serialize=False)),
