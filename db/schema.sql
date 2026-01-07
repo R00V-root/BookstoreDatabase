@@ -158,14 +158,4 @@ CREATE TABLE IF NOT EXISTS order_lines (
     UNIQUE(order_id, book_id)
 );
 
-CREATE TABLE IF NOT EXISTS audit_logs (
-    id BIGSERIAL PRIMARY KEY,
-    action TEXT NOT NULL,
-    description TEXT,
-    order_id BIGINT REFERENCES orders(id) ON DELETE SET NULL,
-    actor TEXT,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-);
-
 COMMIT;

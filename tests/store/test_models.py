@@ -7,7 +7,6 @@ from django.core.exceptions import ValidationError
 
 from store.models import (
     Address,
-    AuditLog,
     Book,
     Cart,
     CartItem,
@@ -86,11 +85,3 @@ def test_checkout_fails_when_inventory_low(book: Book, customer: Customer, inven
     with pytest.raises(ValidationError):
         order.checkout_from_cart(cart)
 
-
-@pytest.mark.django_db
-def test_audit_log_created(book: Book, customer: Customer, inventory: Inventory):
-    cart = Cart.objects.create(customer=customer)
-    CartItem.objects.create(cart=cart, book=book, quantity=1, unit_price=book.price)
-    order = Order(order_number="ORD-3", customer=customer)
-    order.checkout_from_cart(cart)
-    assert AuditLog.objects.filter(order=order, action="checkout").exists()
