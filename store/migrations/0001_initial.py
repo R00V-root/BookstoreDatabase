@@ -366,34 +366,6 @@ class Migration(migrations.Migration):
             ],
             options={"db_table": "order_lines", "unique_together": {("order", "book")}},
         ),
-        migrations.CreateModel(
-            name="Review",
-            fields=[
-                ("id", models.BigAutoField(primary_key=True, serialize=False)),
-                ("created_at", models.DateTimeField(default=django.utils.timezone.now, db_index=True)),
-                ("updated_at", models.DateTimeField(auto_now=True)),
-                ("rating", models.PositiveIntegerField()),
-                ("comment", models.TextField(blank=True)),
-                ("is_public", models.BooleanField(default=True)),
-                (
-                    "book",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE,
-                        related_name="reviews",
-                        to="store.book",
-                    ),
-                ),
-                (
-                    "customer",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE,
-                        related_name="reviews",
-                        to="store.customer",
-                    ),
-                ),
-            ],
-            options={"db_table": "reviews", "unique_together": {("customer", "book")}},
-        ),
         migrations.RunSQL(
             sql="CREATE INDEX IF NOT EXISTS books_search_gin ON books USING GIN (to_tsvector('english', coalesce(title,'') || ' ' || coalesce(description,'')));",
             reverse_sql="DROP INDEX IF EXISTS books_search_gin;",
