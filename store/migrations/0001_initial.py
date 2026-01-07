@@ -8,9 +8,7 @@ import django.utils.timezone
 class Migration(migrations.Migration):
     initial = True
 
-    dependencies = [
-        ("auth", "0012_alter_user_first_name_max_length"),
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
@@ -182,36 +180,6 @@ class Migration(migrations.Migration):
         migrations.AddIndex(
             model_name="order",
             index=models.Index(fields=["customer", "created_at"], name="orders_customer_created_idx"),
-        ),
-        migrations.CreateModel(
-            name="AuditLog",
-            fields=[
-                ("id", models.BigAutoField(primary_key=True, serialize=False)),
-                ("created_at", models.DateTimeField(default=django.utils.timezone.now, db_index=True)),
-                ("updated_at", models.DateTimeField(auto_now=True)),
-                ("action", models.CharField(choices=[("checkout", "Checkout"), ("update", "Update"), ("delete", "Delete")], max_length=32)),
-                ("description", models.TextField()),
-                (
-                    "order",
-                    models.ForeignKey(
-                        blank=True,
-                        null=True,
-                        on_delete=django.db.models.deletion.SET_NULL,
-                        related_name="audit_logs",
-                        to="store.order",
-                    ),
-                ),
-                (
-                    "user",
-                    models.ForeignKey(
-                        blank=True,
-                        null=True,
-                        on_delete=django.db.models.deletion.SET_NULL,
-                        to="auth.user",
-                    ),
-                ),
-            ],
-            options={"db_table": "audit_logs", "ordering": ["-created_at"]},
         ),
         migrations.CreateModel(
             name="Inventory",

@@ -3,7 +3,6 @@ from __future__ import annotations
 from decimal import Decimal
 
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.utils import timezone
@@ -243,7 +242,7 @@ class Order(TimestampedModel):
         self.save(update_fields=["status", "updated_at"])
 
     @transaction.atomic
-    def checkout_from_cart(self, cart: Cart, user_id: int | None = None) -> "Order":
+    def checkout_from_cart(self, cart: Cart) -> "Order":
         if not cart.items.exists():
             raise ValidationError("Cart is empty")
         self.customer = cart.customer
@@ -276,7 +275,6 @@ class Order(TimestampedModel):
         self.save(update_fields=["total_amount", "status", "locked_at", "updated_at"])
         cart.is_active = False
         cart.save(update_fields=["is_active", "updated_at"])
-        AuditLog.log("checkout", f"Order {self.order_number} created", user_id=user_id, order=self)
         return self
 
 
@@ -294,28 +292,6 @@ class OrderLine(TimestampedModel):
     @property
     def subtotal(self) -> Decimal:
         return self.quantity * self.unit_price
-
-
-class AuditLog(TimestampedModel):
-    ACTIONS = (
-        ("checkout", "Checkout"),
-        ("update", "Update"),
-        ("delete", "Delete"),
-    )
-
-    id = models.BigAutoField(primary_key=True)
-    action = models.CharField(max_length=32, choices=ACTIONS)
-    description = models.TextField()
-    order = models.ForeignKey(Order, on_delete=models.SET_NULL, null=True, blank=True, related_name="audit_logs")
-    user = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True, blank=True)
-
-    class Meta:
-        db_table = "audit_logs"
-        ordering = ["-created_at"]
-
-    @classmethod
-    def log(cls, action: str, description: str, *, user_id: int | None = None, order: Order | None = None) -> "AuditLog":
-        return cls.objects.create(action=action, description=description, order=order, user_id=user_id)
 
 
 # Signals for automatic order numbering

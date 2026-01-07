@@ -5,7 +5,6 @@ from django.contrib import admin
 from store.models import (
     Address,
     Author,
-    AuditLog,
     Book,
     BookAuthor,
     BookCategory,
@@ -47,5 +46,4 @@ admin.site.register([
     Inventory,
     Cart,
     CartItem,
-    AuditLog,
 ])
