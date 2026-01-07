@@ -280,22 +280,6 @@ class Order(TimestampedModel):
         return self
 
 
-class OrderAddress(TimestampedModel):
-    ADDRESS_TYPES = (
-        ("shipping", "Shipping"),
-        ("billing", "Billing"),
-    )
-
-    id = models.BigAutoField(primary_key=True)
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="addresses")
-    address_type = models.CharField(max_length=16, choices=ADDRESS_TYPES)
-    address = models.ForeignKey(Address, on_delete=models.PROTECT, related_name="order_addresses")
-
-    class Meta:
-        db_table = "order_addresses"
-        unique_together = ("order", "address_type")
-
-
 class OrderLine(TimestampedModel):
     id = models.BigAutoField(primary_key=True)
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="lines")
