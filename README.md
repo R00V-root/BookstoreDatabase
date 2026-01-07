@@ -78,6 +78,12 @@ docker-compose run --rm web pytest
 
 Use the provided scripts (see `db/backup.sh` and `db/restore.sh`) to snapshot and restore the database.
 
+## Troubleshooting
+
+### Why is there a container named `clever_mendeleev`?
+
+Docker automatically assigns whimsical names to containers when you start one without explicitly providing a `--name` flag. When you run commands such as `docker-compose run --rm web …`, Docker Compose asks the engine to launch an auxiliary container for the one-off task and Docker picks a random name from its internal generator. Seeing a container called `clever_mendeleev` (or similar) simply means one of those helper containers is active; it is not an extra service the project created. The container will disappear once the command finishes when you use `--rm`, or you can stop it manually with `docker stop clever_mendeleev` if it was started without that flag.
+
 ## Demo Flow
 
 A sample walkthrough is documented in `demo/script.md`.
