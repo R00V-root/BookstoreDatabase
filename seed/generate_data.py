@@ -100,9 +100,9 @@ def main() -> None:
     categories_path = output_dir / "categories.csv"
     with categories_path.open("w", newline="") as fh:
         writer = csv.writer(fh)
-        writer.writerow(["name", "description"])
+        writer.writerow(["name"])
         for category in categories:
-            writer.writerow([category, faker.sentence(nb_words=8)])
+            writer.writerow([category])
 
     book_authors_path = output_dir / "book_authors.csv"
     with book_authors_path.open("w", newline="") as fh:
@@ -131,17 +131,6 @@ def main() -> None:
         for category, isbns in category_assignments.items():
             for isbn in sorted(isbns):
                 writer.writerow([isbn, category])
-
-    inventory_path = output_dir / "inventory.csv"
-    with inventory_path.open("w", newline="") as fh:
-        writer = csv.writer(fh)
-        writer.writerow(["isbn", "warehouse_code", "quantity"])
-        for _ in range(rows):
-            writer.writerow([
-                faker.isbn13(separator=""),
-                f"WH-{random.randint(1,5)}",
-                random.randint(0, 200),
-            ])
 
     print(f"Generated synthetic dataset in {output_dir}")
 

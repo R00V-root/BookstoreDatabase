@@ -4,7 +4,7 @@ from decimal import Decimal
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.db import models, transaction
+from django.db import models
 from django.utils import timezone
 
 
@@ -48,7 +48,6 @@ class Publisher(TimestampedModel):
 class Category(TimestampedModel):
     id = models.BigAutoField(primary_key=True)
     name = models.CharField(max_length=128, unique=True)
-    description = models.TextField(blank=True)
 
     class Meta:
         db_table = "categories"
@@ -68,8 +67,6 @@ class Book(TimestampedModel):
     format = models.CharField(max_length=32, default="paperback")
     price = models.DecimalField(max_digits=10, decimal_places=2)
     currency = models.CharField(max_length=3, default="USD")
-    weight_grams = models.PositiveIntegerField(default=0)
-    dimensions = models.CharField(max_length=64, blank=True)
     publisher = models.ForeignKey(Publisher, on_delete=models.PROTECT, related_name="books")
 
     class Meta:
@@ -109,7 +106,6 @@ class Customer(TimestampedModel):
     last_name = models.CharField(max_length=128)
     email = models.EmailField(unique=True)
     phone_number = models.CharField(max_length=32, blank=True)
-    loyalty_points = models.PositiveIntegerField(default=0)
 
     class Meta:
         db_table = "customers"
@@ -118,87 +114,6 @@ class Customer(TimestampedModel):
     def __str__(self) -> str:
         return f"{self.first_name} {self.last_name}"
 
-
-class Address(TimestampedModel):
-    id = models.BigAutoField(primary_key=True)
-    customer = models.ForeignKey(
-        Customer, on_delete=models.CASCADE, related_name="addresses", null=True, blank=True
-    )
-    line1 = models.CharField(max_length=255)
-    line2 = models.CharField(max_length=255, blank=True)
-    city = models.CharField(max_length=128)
-    state = models.CharField(max_length=128)
-    postal_code = models.CharField(max_length=32)
-    country = models.CharField(max_length=64)
-    is_default_shipping = models.BooleanField(default=False)
-    is_default_billing = models.BooleanField(default=False)
-
-    class Meta:
-        db_table = "addresses"
-        indexes = [models.Index(fields=["postal_code", "country"], name="addresses_postal_idx")]
-
-    def __str__(self) -> str:
-        return f"{self.line1}, {self.city}"
-
-
-class Warehouse(TimestampedModel):
-    id = models.BigAutoField(primary_key=True)
-    code = models.CharField(max_length=32, unique=True)
-    name = models.CharField(max_length=255)
-    address = models.ForeignKey(Address, on_delete=models.PROTECT, related_name="warehouses")
-
-    class Meta:
-        db_table = "warehouses"
-
-    def __str__(self) -> str:
-        return self.code
-
-
-class Inventory(TimestampedModel):
-    id = models.BigAutoField(primary_key=True)
-    warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE, related_name="inventory")
-    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name="inventory")
-    quantity = models.PositiveIntegerField(default=0)
-
-    class Meta:
-        db_table = "inventory"
-        unique_together = ("warehouse", "book")
-
-    def allocate(self, amount: int) -> None:
-        if amount < 0:
-            raise ValidationError("Allocation amount cannot be negative")
-        if self.quantity < amount:
-            raise ValidationError("Insufficient inventory")
-        self.quantity -= amount
-        self.save(update_fields=["quantity", "updated_at"])
-
-
-class Cart(TimestampedModel):
-    id = models.BigAutoField(primary_key=True)
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="carts")
-    is_active = models.BooleanField(default=True)
-
-    class Meta:
-        db_table = "carts"
-
-    def total_amount(self) -> Decimal:
-        return sum((item.subtotal for item in self.items.all()), Decimal("0.00"))
-
-
-class CartItem(TimestampedModel):
-    id = models.BigAutoField(primary_key=True)
-    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name="items")
-    book = models.ForeignKey(Book, on_delete=models.PROTECT, related_name="cart_items")
-    quantity = models.PositiveIntegerField()
-    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
-
-    class Meta:
-        db_table = "cart_items"
-        unique_together = ("cart", "book")
-
-    @property
-    def subtotal(self) -> Decimal:
-        return self.quantity * self.unit_price
 
 
 class OrderStatus(models.TextChoices):
@@ -218,7 +133,6 @@ class Order(TimestampedModel):
     status = models.CharField(max_length=16, choices=OrderStatus.choices, default=OrderStatus.PENDING)
     total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
     placed_at = models.DateTimeField(default=timezone.now, db_index=True)
-    locked_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         db_table = "orders"
@@ -240,43 +154,6 @@ class Order(TimestampedModel):
             raise ValidationError("Illegal status transition")
         self.status = target_status
         self.save(update_fields=["status", "updated_at"])
-
-    @transaction.atomic
-    def checkout_from_cart(self, cart: Cart) -> "Order":
-        if not cart.items.exists():
-            raise ValidationError("Cart is empty")
-        self.customer = cart.customer
-        self.status = OrderStatus.PENDING
-        self.order_number = self.order_number or f"ORD-{timezone.now().strftime('%Y%m%d%H%M%S%f')}"
-        self.locked_at = timezone.now()
-        self.save()
-        total = Decimal("0.00")
-        for item in cart.items.select_related("book").all():
-            inventory_rows = Inventory.objects.select_for_update().filter(book=item.book).order_by("id")
-            if not inventory_rows.exists():
-                raise ValidationError(f"No inventory for {item.book}")
-            allocated = False
-            for stock in inventory_rows:
-                if stock.quantity >= item.quantity:
-                    stock.allocate(item.quantity)
-                    allocated = True
-                    break
-            if not allocated:
-                raise ValidationError(f"Insufficient inventory for {item.book}")
-            OrderLine.objects.create(
-                order=self,
-                book=item.book,
-                quantity=item.quantity,
-                unit_price=item.unit_price,
-            )
-            total += item.subtotal
-        self.total_amount = total
-        self.status = OrderStatus.PAID
-        self.save(update_fields=["total_amount", "status", "locked_at", "updated_at"])
-        cart.is_active = False
-        cart.save(update_fields=["is_active", "updated_at"])
-        return self
-
 
 class OrderLine(TimestampedModel):
     id = models.BigAutoField(primary_key=True)

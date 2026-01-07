@@ -42,7 +42,6 @@ class Migration(migrations.Migration):
                 ("created_at", models.DateTimeField(default=django.utils.timezone.now, db_index=True)),
                 ("updated_at", models.DateTimeField(auto_now=True)),
                 ("name", models.CharField(max_length=128, unique=True)),
-                ("description", models.TextField(blank=True)),
             ],
             options={"db_table": "categories", "ordering": ["name"]},
         ),
@@ -56,40 +55,8 @@ class Migration(migrations.Migration):
                 ("last_name", models.CharField(max_length=128)),
                 ("email", models.EmailField(max_length=254, unique=True)),
                 ("phone_number", models.CharField(blank=True, max_length=32)),
-                ("loyalty_points", models.PositiveIntegerField(default=0)),
             ],
             options={"db_table": "customers", "ordering": ["last_name", "first_name"]},
-        ),
-        migrations.CreateModel(
-            name="Address",
-            fields=[
-                ("id", models.BigAutoField(primary_key=True, serialize=False)),
-                ("created_at", models.DateTimeField(default=django.utils.timezone.now, db_index=True)),
-                ("updated_at", models.DateTimeField(auto_now=True)),
-                ("line1", models.CharField(max_length=255)),
-                ("line2", models.CharField(blank=True, max_length=255)),
-                ("city", models.CharField(max_length=128)),
-                ("state", models.CharField(max_length=128)),
-                ("postal_code", models.CharField(max_length=32)),
-                ("country", models.CharField(max_length=64)),
-                ("is_default_shipping", models.BooleanField(default=False)),
-                ("is_default_billing", models.BooleanField(default=False)),
-                (
-                    "customer",
-                    models.ForeignKey(
-                        blank=True,
-                        null=True,
-                        on_delete=django.db.models.deletion.CASCADE,
-                        related_name="addresses",
-                        to="store.customer",
-                    ),
-                ),
-            ],
-            options={"db_table": "addresses"},
-        ),
-        migrations.AddIndex(
-            model_name="address",
-            index=models.Index(fields=["postal_code", "country"], name="addresses_postal_idx"),
         ),
         migrations.CreateModel(
             name="Book",
@@ -105,8 +72,6 @@ class Migration(migrations.Migration):
                 ("format", models.CharField(default="paperback", max_length=32)),
                 ("price", models.DecimalField(decimal_places=2, max_digits=10)),
                 ("currency", models.CharField(default="USD", max_length=3)),
-                ("weight_grams", models.PositiveIntegerField(default=0)),
-                ("dimensions", models.CharField(blank=True, max_length=64)),
                 (
                     "publisher",
                     models.ForeignKey(
@@ -119,43 +84,6 @@ class Migration(migrations.Migration):
             options={"db_table": "books"},
         ),
         migrations.CreateModel(
-            name="Warehouse",
-            fields=[
-                ("id", models.BigAutoField(primary_key=True, serialize=False)),
-                ("created_at", models.DateTimeField(default=django.utils.timezone.now, db_index=True)),
-                ("updated_at", models.DateTimeField(auto_now=True)),
-                ("code", models.CharField(max_length=32, unique=True)),
-                ("name", models.CharField(max_length=255)),
-                (
-                    "address",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.PROTECT,
-                        related_name="warehouses",
-                        to="store.address",
-                    ),
-                ),
-            ],
-            options={"db_table": "warehouses"},
-        ),
-        migrations.CreateModel(
-            name="Cart",
-            fields=[
-                ("id", models.BigAutoField(primary_key=True, serialize=False)),
-                ("created_at", models.DateTimeField(default=django.utils.timezone.now, db_index=True)),
-                ("updated_at", models.DateTimeField(auto_now=True)),
-                ("is_active", models.BooleanField(default=True)),
-                (
-                    "customer",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE,
-                        related_name="carts",
-                        to="store.customer",
-                    ),
-                ),
-            ],
-            options={"db_table": "carts"},
-        ),
-        migrations.CreateModel(
             name="Order",
             fields=[
                 ("id", models.BigAutoField(primary_key=True, serialize=False)),
@@ -165,7 +93,6 @@ class Migration(migrations.Migration):
                 ("status", models.CharField(choices=[("PENDING", "Pending"), ("PAID", "Paid"), ("ALLOCATED", "Allocated"), ("SHIPPED", "Shipped"), ("DELIVERED", "Delivered"), ("CANCELLED", "Cancelled"), ("RETURNED", "Returned")], default="PENDING", max_length=16)),
                 ("total_amount", models.DecimalField(decimal_places=2, default=0, max_digits=12)),
                 ("placed_at", models.DateTimeField(db_index=True, default=django.utils.timezone.now)),
-                ("locked_at", models.DateTimeField(blank=True, null=True)),
                 (
                     "customer",
                     models.ForeignKey(
@@ -180,32 +107,6 @@ class Migration(migrations.Migration):
         migrations.AddIndex(
             model_name="order",
             index=models.Index(fields=["customer", "created_at"], name="orders_customer_created_idx"),
-        ),
-        migrations.CreateModel(
-            name="Inventory",
-            fields=[
-                ("id", models.BigAutoField(primary_key=True, serialize=False)),
-                ("created_at", models.DateTimeField(default=django.utils.timezone.now, db_index=True)),
-                ("updated_at", models.DateTimeField(auto_now=True)),
-                ("quantity", models.PositiveIntegerField(default=0)),
-                (
-                    "book",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE,
-                        related_name="inventory",
-                        to="store.book",
-                    ),
-                ),
-                (
-                    "warehouse",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE,
-                        related_name="inventory",
-                        to="store.warehouse",
-                    ),
-                ),
-            ],
-            options={"db_table": "inventory", "unique_together": {("warehouse", "book")}},
         ),
         migrations.CreateModel(
             name="BookAuthor",
@@ -253,33 +154,6 @@ class Migration(migrations.Migration):
                 ),
             ],
             options={"db_table": "book_categories", "unique_together": {("book", "category")}},
-        ),
-        migrations.CreateModel(
-            name="CartItem",
-            fields=[
-                ("id", models.BigAutoField(primary_key=True, serialize=False)),
-                ("created_at", models.DateTimeField(default=django.utils.timezone.now, db_index=True)),
-                ("updated_at", models.DateTimeField(auto_now=True)),
-                ("quantity", models.PositiveIntegerField()),
-                ("unit_price", models.DecimalField(decimal_places=2, max_digits=10)),
-                (
-                    "book",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.PROTECT,
-                        related_name="cart_items",
-                        to="store.book",
-                    ),
-                ),
-                (
-                    "cart",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE,
-                        related_name="items",
-                        to="store.cart",
-                    ),
-                ),
-            ],
-            options={"db_table": "cart_items", "unique_together": {("cart", "book")}},
         ),
         migrations.CreateModel(
             name="OrderLine",
