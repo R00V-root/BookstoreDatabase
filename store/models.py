@@ -106,6 +106,7 @@ class Customer(TimestampedModel):
     last_name = models.CharField(max_length=128)
     email = models.EmailField(unique=True)
     phone_number = models.CharField(max_length=32, blank=True)
+    loyalty_points = models.PositiveIntegerField(default=0)
 
     class Meta:
         db_table = "customers"
