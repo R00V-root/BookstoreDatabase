@@ -41,6 +41,7 @@ CREATE TABLE IF NOT EXISTS books (
     publication_date DATE,
     language VARCHAR(32) DEFAULT 'EN',
     format VARCHAR(32) DEFAULT 'paperback',
+    weight_grams INTEGER DEFAULT 0,
     price NUMERIC(10,2) NOT NULL,
     currency CHAR(3) DEFAULT 'USD',
     publisher_id BIGINT NOT NULL REFERENCES publishers(id) ON DELETE RESTRICT,

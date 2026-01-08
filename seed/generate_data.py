@@ -72,12 +72,13 @@ def main() -> None:
     books_path = output_dir / "books.csv"
     with books_path.open("w", newline="") as fh:
         writer = csv.writer(fh)
-        writer.writerow(["isbn", "title", "description", "price", "currency"])
+        writer.writerow(["isbn", "title", "description", "weight_grams", "price", "currency"])
         books = [
             (
                 faker.isbn13(separator=""),
                 faker.sentence(nb_words=5),
                 faker.paragraph(nb_sentences=2),
+                random.randint(120, 1500),
                 round(random.uniform(5, 90), 2),
                 "USD",
             )
