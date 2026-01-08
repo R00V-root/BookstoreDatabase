@@ -65,6 +65,7 @@ class Book(TimestampedModel):
     publication_date = models.DateField(null=True, blank=True)
     language = models.CharField(max_length=32, default="EN")
     format = models.CharField(max_length=32, default="paperback")
+    weight_grams = models.PositiveIntegerField(default=0)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     currency = models.CharField(max_length=3, default="USD")
     publisher = models.ForeignKey(Publisher, on_delete=models.PROTECT, related_name="books")
